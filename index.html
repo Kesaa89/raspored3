@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.6 Alpha</title>
+    <title>Мој распоред v4.7 Alpha</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -64,7 +64,6 @@
         .btn-action.primary { background: var(--accent); color: var(--surface); border: none; }
         .btn-action:active { transform: scale(0.95); }
 
-        /* Toast нотификација */
         #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 2000; pointer-events: none; }
 
         #swapModal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px); }
@@ -139,7 +138,6 @@ const MESECI = ["Јануар", "Фебруар", "Март", "Април", "М�
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
 let activeMesto = null;
 
-// Pull to Refresh Logic
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
@@ -244,12 +242,7 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
-
-function showToast() {
-    const t = document.getElementById('toast');
-    t.style.opacity = '1';
-    setTimeout(() => { t.style.opacity = '0'; }, 2000);
-}
+function showToast() { const t = document.getElementById('toast'); t.style.opacity = '1'; setTimeout(() => { t.style.opacity = '0'; }, 2000); }
 
 function generateText() {
     const dan = document.getElementById('danSel').value;
@@ -257,12 +250,17 @@ function generateText() {
     const now = new Date();
     let d1 = new Date(now.getFullYear(), now.getMonth(), parseInt(dan));
     let datumPrikaz = "";
+    
     if (smena === "3") {
+        // Логика за 3. смену са приказаним месецом за оба дана
         let d2 = new Date(now.getFullYear(), now.getMonth(), parseInt(dan) + 1);
-        datumPrikaz = `${String(d1.getDate()).padStart(2, '0')}./${String(d2.getDate()).padStart(2, '0')}.${String(d2.getMonth() + 1).padStart(2, '0')}.${d2.getFullYear()}.`;
+        let d1Prikaz = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}`;
+        let d2Prikaz = `${String(d2.getDate()).padStart(2, '0')}.${String(d2.getMonth() + 1).padStart(2, '0')}`;
+        datumPrikaz = `${d1Prikaz}./${d2Prikaz}.${d2.getFullYear()}.`;
     } else {
         datumPrikaz = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}.`;
     }
+
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumPrikaz}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
