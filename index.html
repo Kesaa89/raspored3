@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.0 Alpha</title>
+    <title>Мој распоред v4.1 Alpha</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -38,13 +38,11 @@
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* Header */
         .app-bar { padding: 60px 24px 10px; background: transparent; flex-shrink: 0; }
         .app-bar h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -1px; }
 
         .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; }
 
-        /* Professional Cards */
         .card { 
             background: var(--surface); 
             border-radius: var(--card-radius); 
@@ -54,80 +52,55 @@
             margin-bottom: 16px; 
         }
         
-        .upload-area { 
-            text-align: center; 
-            padding: 40px 20px;
-            background: var(--surface);
-        }
-
-        .icon-box { 
-            width: 64px; height: 64px; 
-            margin: 0 auto 16px; 
-            display: flex; align-items: center; justify-content: center;
-            background: var(--bg); border-radius: 16px;
-            color: var(--accent);
-        }
-
-        .btn-main { 
-            background: var(--accent); 
-            color: var(--bg); 
-            padding: 16px 32px; 
-            border-radius: 14px; 
-            display: inline-block; 
-            font-weight: 700; 
-            font-size: 15px;
-            margin-top: 10px; 
-            cursor: pointer; 
-            border: none;
-        }
-
         /* Selectors */
         .controls { display: grid; gap: 10px; margin-bottom: 20px; }
         select { 
-            width: 100%; 
-            padding: 16px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border); 
-            background: var(--surface); 
-            color: var(--text); 
-            font-size: 15px; 
-            font-weight: 600; 
-            outline: none; 
-            appearance: none;
+            width: 100%; padding: 16px; border-radius: 16px; border: 1px solid var(--border); 
+            background: var(--surface); color: var(--text); font-size: 15px; font-weight: 600; outline: none; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 16px;
+            background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
         }
 
         /* List Styling */
         .mesto-row { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 16px 0; border-bottom: 1px solid var(--border); 
+            padding: 14px 0; border-bottom: 1px solid var(--border); 
+            cursor: pointer;
         }
+        .mesto-row:active { opacity: 0.6; }
         .mesto-row:last-child { border-bottom: none; }
         .mesto-info { display: flex; flex-direction: column; gap: 2px; }
         .mesto-name { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
-        .worker-name { font-size: 16px; font-weight: 700; color: var(--text); }
+        .worker-name { font-size: 15px; font-weight: 700; color: var(--text); }
+        .swap-hint { font-size: 10px; color: var(--accent); font-weight: 600; margin-top: 2px; }
 
-        .shift-dot { width: 6px; height: 18px; border-radius: 3px; }
-        .s1 { background: #0ea5e9; }
-        .s2 { background: #f59e0b; }
-        .s3 { background: #6366f1; }
+        /* Modal for swapping */
+        #swapModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            display: none; align-items: flex-end; z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--surface); width: 100%; max-height: 70vh;
+            border-radius: 30px 30px 0 0; padding: 24px;
+            overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+        }
+        .modal-header { font-weight: 800; font-size: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .worker-option { 
+            padding: 16px; border-bottom: 1px solid var(--border); 
+            font-weight: 600; font-size: 16px;
+        }
+        .worker-option:active { background: var(--bg); }
 
-        /* Bottom Navigation */
+        /* Navigation */
         .nav { 
             position: fixed; bottom: 24px; left: 24px; right: 24px; 
-            background: var(--surface); 
-            display: flex; border: 1px solid var(--border);
-            padding: 8px; border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            z-index: 100; 
+            background: var(--surface); display: flex; border: 1px solid var(--border);
+            padding: 8px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; 
         }
         .nav-item { 
             flex: 1; display: flex; flex-direction: column; align-items: center; 
-            padding: 10px; border-radius: 18px; color: var(--text-muted); 
-            transition: 0.2s;
+            padding: 10px; border-radius: 18px; color: var(--text-muted); transition: 0.2s;
         }
         .nav-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; stroke-width: 2; fill: none; }
         .nav-item label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
@@ -142,13 +115,14 @@
 
 <div class="main-content">
     <div id="tab-u" class="tab-pane">
-        <div class="card upload-area">
-            <div class="icon-box">
-                <svg viewBox="0 0 24 24" width="32" height="32"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="card" style="text-align: center; padding: 40px 20px;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--bg); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v9" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div style="font-size: 18px; font-weight: 700;">Распоред службе</div>
-            <p style="font-size: 14px; color: var(--text-muted); margin: 8px 0 20px;">Поставите месечни план за обраду података.</p>
-            <label class="btn-main">Учитај фајл<input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden"></label>
+            <label style="background: var(--accent); color: var(--bg); padding: 16px 32px; border-radius: 14px; display: inline-block; font-weight: 700; margin-top: 20px; cursor: pointer;">
+                Учитај фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+            </label>
         </div>
     </div>
 
@@ -163,36 +137,29 @@
         </div>
         <div class="card" id="lista-prikaz" style="padding: 10px 20px;"></div>
     </div>
+</div>
 
-    <div id="tab-t" class="tab-pane hidden">
-        <div class="card" style="text-align: center; padding: 60px 20px;">
-            <div class="icon-box"><svg viewBox="0 0 24 24" width="32" height="32"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            <p style="color: var(--text-muted); font-weight: 600; font-size: 15px;">Израчунавање радних сати ће бити доступно у Бета верзији.</p>
-        </div>
+<div id="swapModal">
+    <div class="modal-content">
+        <div class="modal-header">Изаберите замену <span onclick="closeModal()" style="color: var(--text-muted);">✕</span></div>
+        <div id="workerList"></div>
     </div>
 </div>
 
 <div class="nav">
-    <div class="nav-item active" onclick="showTab('u', 'Увоз', this)">
-        <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        <label>Увоз</label>
-    </div>
-    <div class="nav-item" onclick="showTab('s', 'Дневни план', this)">
-        <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        <label>План</label>
-    </div>
-    <div class="nav-item" onclick="showTab('t', 'Статистика', this)">
-        <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        <label>Сати</label>
-    </div>
+    <div class="nav-item active" onclick="showTab('u', 'Увоз', this)"><svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><label>Увоз</label></div>
+    <div class="nav-item" onclick="showTab('s', 'Дневни план', this)"><svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><label>План</label></div>
+    <div class="nav-item" onclick="showTab('t', 'Статистика', this)"><svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><label>Сати</label></div>
 </div>
 
 <script>
 let rawData = [];
-// Враћен фокус на "Управна зграда"
+let replacements = {}; // Објекат за чување привремених замена
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
+
+let activeMesto = null;
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
@@ -216,11 +183,7 @@ document.getElementById('fileInput').onchange = function(e) {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
                 MESTA.forEach(m => {
-                    // Прецизнија претрага за Управну зграду
-                    if(rowText.includes(m.toUpperCase()) || 
-                       (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) ||
-                       (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА")) ||
-                       (m === "Управна зграда" && (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")))) {
+                    if(rowText.includes(m.toUpperCase()) || (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) || (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА")) || (m === "Управна зграда" && (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")))) {
                         currentMesto = m;
                     }
                 });
@@ -256,17 +219,68 @@ function renderList() {
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
     let html = "";
+    
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
-        html += `<div class="mesto-row">
+        const originalIme = radnik ? radnik.ime : "—";
+        const key = `${dan}-${smena}-${m}`;
+        const displayName = replacements[key] ? `${replacements[key]} уместо ${originalIme}` : originalIme;
+
+        html += `<div class="mesto-row" onclick="openSwap('${m}')">
             <div class="mesto-info">
                 <span class="mesto-name">${m}</span>
-                <span class="worker-name">${radnik ? radnik.ime : "—"}</span>
+                <span class="worker-name">${displayName}</span>
+                ${originalIme !== "—" ? '<span class="swap-hint">Кликни за замену</span>' : ''}
             </div>
-            <div class="shift-dot s${smena}"></div>
         </div>`;
     });
     container.innerHTML = html;
+}
+
+function openSwap(mesto) {
+    activeMesto = mesto;
+    const listCont = document.getElementById('workerList');
+    listCont.innerHTML = "";
+    
+    // Сви јединствени радници из фајла за избор замене
+    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
+    
+    allWorkers.forEach(w => {
+        const div = document.createElement('div');
+        div.className = 'worker-option';
+        div.innerText = w;
+        div.onclick = () => applySwap(w);
+        listCont.appendChild(div);
+    });
+    
+    // Опција за ресетовање замене
+    const resetDiv = document.createElement('div');
+    resetDiv.className = 'worker-option';
+    resetDiv.style.color = 'red';
+    resetDiv.innerText = "Врати оригиналног радника";
+    resetDiv.onclick = () => applySwap(null);
+    listCont.appendChild(resetDiv);
+
+    document.getElementById('swapModal').style.display = 'flex';
+}
+
+function applySwap(workerName) {
+    const dan = document.getElementById('danSel').value;
+    const smena = document.getElementById('smenaSel').value;
+    const key = `${dan}-${smena}-${activeMesto}`;
+    
+    if(workerName) {
+        replacements[key] = workerName;
+    } else {
+        delete replacements[key];
+    }
+    
+    closeModal();
+    renderList();
+}
+
+function closeModal() {
+    document.getElementById('swapModal').style.display = 'none';
 }
 </script>
 </body>
