@@ -3,11 +3,11 @@
   "short_name": "Распоред",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f3f6fc",
-  "theme_color": "#0b57d0",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2850/2850289.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
