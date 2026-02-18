@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#004798">
-    
-    <title>Мој распоред v4.9.8</title>
+    <title>Мој распоред v4.9.6</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -81,6 +76,7 @@
         .mesto-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .mesto-name { font-size: 11px; color: var(--on-surface-variant); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
         .worker-name { font-size: 17px; font-weight: 700; }
+        .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
@@ -99,40 +95,34 @@
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
         <div id="dashboard-content"></div>
-        <div id="setup-area" class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 30px; margin-top: 10px;">
-            <p id="setup-text" style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 15px; text-transform: uppercase;">Подешавање распореда</p>
-            <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 16px 32px; width: auto;">
-                Учитај Excel <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+        <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
+            <p style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Ажурирај распоред</p>
+            <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto;">
+                Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
             </label>
         </div>
     </div>
 
     <div id="tab-s" class="tab-pane hidden">
-        <div id="plan-lock-msg" style="text-align: center; padding: 40px 20px; opacity: 0.6;">
-            <p style="font-weight: 700;">Прво учитајте распоред на почетној страни.</p>
+        <div class="controls">
+            <select id="danSel" onchange="haptic(40); renderList()"></select>
+            <select id="smenaSel" onchange="haptic(40); renderList()">
+                <option value="1">Прва смена</option>
+                <option value="2">Друга смена</option>
+                <option value="3">Трећа смена</option>
+            </select>
         </div>
-        <div id="plan-content" class="hidden">
-            <div class="controls">
-                <select id="danSel" onchange="haptic(40); renderList()"></select>
-                <select id="smenaSel" onchange="haptic(40); renderList()">
-                    <option value="1">Прва смена</option>
-                    <option value="2">Друга смена</option>
-                    <option value="3">Трећа смена</option>
-                </select>
-            </div>
-            <div id="lista-prikaz"></div>
-            <div class="actions" id="action-buttons" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
-                <button class="btn-action ripple" onclick="copyToClipboard(event)">Копирај</button>
-                <button class="btn-action primary ripple" onclick="shareList(event)">Подели</button>
-            </div>
+        <div id="lista-prikaz"></div>
+        <div class="actions" id="action-buttons" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+            <button class="btn-action ripple" onclick="copyToClipboard(event)">Копирај</button>
+            <button class="btn-action primary ripple" onclick="shareList(event)">Подели</button>
         </div>
     </div>
 
     <div id="tab-i" class="tab-pane hidden">
-        <div class="card" style="padding: 20px; background: var(--surface-variant); border-radius: var(--card-radius); border: 1px solid var(--border);">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.8 Stable</div>
-            <p style="font-size: 13px; opacity: 0.7; margin-bottom: 20px;">Омогућена пуна Chrome инсталација.</p>
-            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши све податке</button>
+        <div class="card" style="padding: 20px;">
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.6 Stable</div>
+            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши податке</button>
         </div>
     </div>
 </div>
@@ -174,11 +164,10 @@ function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
     if (saved) {
         rawData = JSON.parse(saved);
-        document.getElementById('setup-text').innerText = "Ажурирај распоред";
+        setupFilters();
         renderDashboard();
     } else {
-        document.getElementById('dashboard-content').innerHTML = `
-            <div class="welcome-card"><h2>Добродошли</h2><p>Систем је спреман. Потребно је да учитате Excel фајл са распоредом.</p></div>`;
+        document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>Добродошли</h2><p>Учитајте распоред да бисте почели.</p></div>`;
     }
 }
 
@@ -190,7 +179,6 @@ function getCurrentSmena() {
 }
 
 function renderDashboard() {
-    if(rawData.length === 0) return;
     const now = new Date();
     const dan = now.getDate();
     const smena = getCurrentSmena();
@@ -233,14 +221,12 @@ document.getElementById('fileInput').onchange = function(e) {
             });
         });
         localStorage.setItem('raspored_data', JSON.stringify(rawData));
-        haptic([60, 40, 60]);
-        location.reload();
+        setupFilters(); renderDashboard(); haptic([60, 40, 60]);
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
 
 function setupFilters() {
-    if(rawData.length === 0) return;
     const sel = document.getElementById('danSel'); sel.innerHTML = "";
     const now = new Date();
     const maxDays = Math.max(...rawData.map(r => r.raspored.length));
@@ -254,7 +240,6 @@ function setupFilters() {
 }
 
 function renderList() {
-    if(rawData.length === 0) return;
     const dan = document.getElementById('danSel').value;
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
@@ -271,6 +256,7 @@ function renderList() {
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
+                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
             </div>
             <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
         container.appendChild(row);
@@ -297,7 +283,10 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 
-function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
+function closeModal() { 
+    haptic(25); // Суптилна вибрација на затварање
+    document.getElementById('swapModal').style.display = 'none'; 
+}
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
@@ -305,17 +294,7 @@ function showTab(tabId, title, el) {
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     if(el) { el.classList.add('active'); haptic(45); }
     document.getElementById('page-title').innerText = title;
-
-    if(tabId === 's') {
-        if(rawData.length > 0) {
-            document.getElementById('plan-lock-msg').classList.add('hidden');
-            document.getElementById('plan-content').classList.remove('hidden');
-            setupFilters(); renderList();
-        } else {
-            document.getElementById('plan-lock-msg').classList.remove('hidden');
-            document.getElementById('plan-content').classList.add('hidden');
-        }
-    }
+    if(tabId === 's') { setupFilters(); renderList(); }
 }
 
 function generateText() {
@@ -340,4 +319,28 @@ function generateText() {
 }
 
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
-async function 
+async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+
+function clearAppData() { 
+    haptic(100); 
+    setTimeout(() => {
+        if(confirm("Обрисати све податке?")) { 
+            localStorage.clear(); 
+            location.reload(); 
+        }
+    }, 100);
+}
+
+// PULL TO REFRESH
+let touchStart = 0;
+const scrollArea = document.getElementById('scroll-area');
+const ptr = document.getElementById('ptr-indicator');
+scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
+scrollArea.ontouchmove = e => {
+    let diff = e.touches[0].pageY - touchStart;
+    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
+};
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+</script>
+</body>
+</html>
