@@ -40,10 +40,11 @@
         * { font-family: 'Inter', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .app-bar { padding: 50px 20px 20px; background: var(--surface); border-bottom: 1px solid var(--border); z-index: 10; }
+        .app-bar { padding: 50px 20px 20px; background: var(--surface); border-bottom: 1px solid var(--border); z-index: 10; flex-shrink: 0; }
         .app-bar h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.8px; }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 20px 16px 120px; scroll-behavior: smooth; }
+        /* Овде је кључна промена: padding-bottom је сада 160px да се патрола 2 не би преклопила са менијем */
+        .main-content { flex: 1; overflow-y: auto; padding: 20px 16px 160px; scroll-behavior: smooth; }
 
         .section-card { background: var(--surface); border-radius: 20px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--card-shadow); margin-bottom: 16px; }
         
@@ -56,9 +57,9 @@
         .mesto-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
         .mesto-row:last-child { border-bottom: none; }
         .mesto-name { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-        .worker-name { font-size: 16px; font-weight: 700; color: var(--text); }
+        .worker-name { font-size: 16px; font-weight: 700; color: var(--text); text-align: right; margin-left: 10px; }
 
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; border-top: 1px solid var(--border); padding: 12px 12px 30px; gap: 8px; backdrop-filter: blur(10px); background: rgba(var(--surface), 0.8); }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; border-top: 1px solid var(--border); padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); gap: 8px; backdrop-filter: blur(10px); background: rgba(var(--surface), 0.9); z-index: 100; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; border-radius: 16px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; }
         .nav-item span { font-size: 22px; margin-bottom: 4px; }
         .nav-item label { font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -96,7 +97,7 @@
     <div id="tab-t" class="tab-pane hidden">
         <div class="section-card" style="text-align: center; padding: 40px 20px;">
             <div style="font-size: 30px; margin-bottom: 10px;">📉</div>
-            <p style="color: var(--text-muted); font-weight: 500;">Анализа сати и статистика се припремају за Бета верзију.</p>
+            <p style="color: var(--text-muted); font-weight: 500;">Анализа сати и статистика се припремају за Бета верзији.</p>
         </div>
     </div>
 </div>
