@@ -48,7 +48,7 @@
 
         .mesto-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--outline); }
         .mesto-item:last-child { border-bottom: none; }
-        .radnik-tag { background: var(--accent); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; min-width: 140px; text-align: center; }
+        .radnik-tag { background: var(--accent); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 13px; min-width: 150px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .nav { position: fixed; bottom: 16px; left: 16px; right: 16px; background: var(--container); border-radius: 24px; height: 72px; display: flex; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1000; }
         .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; opacity: 0.6; cursor: pointer; }
@@ -74,7 +74,7 @@
                 </label>
             </div>
             <div class="card"><strong>Корак 1</strong><br>Учитај Excel</div>
-            <div class="card"><strong>Корак 2</strong><br>Одабери дан</div>
+            <div class="card"><strong>Корак 2</strong><br>Пронађи дан</div>
         </div>
     </div>
 
@@ -92,7 +92,7 @@
     </div>
 
     <div id="tab-t" class="tab-pane hidden">
-        <div class="card full">Статистика ће бити додана у Бета верзији.</div>
+        <div class="card full">📊 Статистика ће бити додана у Бета верзији.</div>
     </div>
 </div>
 
@@ -106,18 +106,15 @@
 let rawData = [];
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Текија", "Магацин Караташ", "Депонија Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 
-// Register Service Worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-    });
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
 }
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    el.classList.add('active');
+    if(el) el.classList.add('active');
     document.getElementById('page-title').innerText = title;
 }
 
@@ -127,26 +124,32 @@ document.getElementById('fileInput').onchange = function(e) {
         const data = new Uint8Array(ex.target.result);
         const wb = XLSX.read(data, {type: 'array'});
         rawData = [];
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
-        
-        let currentMesto = "";
-        rows.forEach(row => {
-            if(!row[1]) return;
-            let text = row.join(" ").toUpperCase();
-            MESTA.forEach(m => { if(text.includes(m.toUpperCase())) currentMesto = m; });
+
+        wb.SheetNames.forEach(sheetName => {
+            const sheet = wb.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            let currentMesto = "";
             
-            if(/^\d+/.test(String(row[0]).trim()) && currentMesto) {
-                rawData.push({
-                    ime: String(row[1]).trim(),
-                    mesto: currentMesto,
-                    raspored: row.slice(2).map(s => s ? String(s).trim() : "")
-                });
-            }
+            rows.forEach(row => {
+                if(!row || row.length < 2) return;
+                let rowText = row.join(" ").toUpperCase();
+                MESTA.forEach(m => { if(rowText.includes(m.toUpperCase())) currentMesto = m; });
+                
+                if(/^\d+/.test(String(row[0]).trim()) && String(row[1]).length > 2 && currentMesto) {
+                    rawData.push({
+                        ime: String(row[1]).trim(),
+                        mesto: currentMesto,
+                        raspored: row.slice(2).map(s => s ? String(s).trim().toUpperCase() : "")
+                    });
+                }
+            });
         });
-        setupFilters();
-        renderList();
-        showTab('s', 'Дневни распоред', document.querySelectorAll('.nav-link')[1]);
+
+        if(rawData.length > 0) {
+            setupFilters();
+            renderList();
+            showTab('s', 'Дневни распоред', document.querySelectorAll('.nav-link')[1]);
+        }
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
@@ -154,14 +157,14 @@ document.getElementById('fileInput').onchange = function(e) {
 function setupFilters() {
     const sel = document.getElementById('danSel');
     sel.innerHTML = "";
-    if (rawData.length > 0) {
-        const daysInMonth = rawData[0].raspored.length;
-        for(let i=1; i<=daysInMonth; i++) {
-            let opt = document.createElement('option');
-            opt.value = i; opt.innerText = i + ". Дан";
-            sel.appendChild(opt);
-        }
+    const maxDays = Math.max(...rawData.map(r => r.raspored.length));
+    for(let i=1; i<=maxDays; i++) {
+        let opt = document.createElement('option');
+        opt.value = i; opt.innerText = i + ". Дан";
+        sel.appendChild(opt);
     }
+    const today = new Date().getDate();
+    if(today <= maxDays) sel.value = today;
     sel.onchange = renderList;
     document.getElementById('smenaSel').onchange = renderList;
 }
@@ -171,7 +174,6 @@ function renderList() {
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
     let html = "";
-    
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         html += `<div class="mesto-item"><span>${m}</span><div class="radnik-tag">${radnik ? radnik.ime : "—"}</div></div>`;
