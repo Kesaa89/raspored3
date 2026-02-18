@@ -33,7 +33,7 @@
                 --text-muted: #94a3b8;
                 --primary: #334155;
                 --accent: #60a5fa;
-                --border: #334155;
+                --border: #444b5a;
             }
         }
 
@@ -50,8 +50,25 @@
         .upload-area { text-align: center; border: 2px dashed var(--border); background: rgba(59, 130, 246, 0.03); }
         .btn-main { background: var(--accent); color: white; padding: 14px 28px; border-radius: 14px; display: inline-block; font-weight: 700; margin-top: 15px; cursor: pointer; border: none; box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3); }
 
+        /* Стизализовани селектори са стрелицом */
         .controls { display: grid; gap: 12px; margin-bottom: 20px; }
-        select { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; font-weight: 600; outline: none; appearance: none; }
+        select { 
+            width: 100%; 
+            padding: 16px 45px 16px 16px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+            background: var(--surface); 
+            color: var(--text); 
+            font-size: 16px; 
+            font-weight: 600; 
+            outline: none; 
+            appearance: none;
+            /* SVG стрелица */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 18px;
+        }
 
         .mesto-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
         .mesto-row:last-child { border-bottom: none; }
