@@ -318,13 +318,15 @@ function generateText() {
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
 
-// ОВАЈ ДЕО СМО САМО МАЛО УПРАВИЛИ
+// ПОПРАВЉЕН ДЕО: Прво тресе, па пита
 function clearAppData() { 
     haptic(100); 
-    if(confirm("Обрисати све?")) { 
-        localStorage.clear(); 
-        location.reload(); 
-    } 
+    setTimeout(() => {
+        if(confirm("Обрисати све податке?")) { 
+            localStorage.clear(); 
+            location.reload(); 
+        }
+    }, 100);
 }
 
 // PULL TO REFRESH
