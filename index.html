@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.1 Alpha</title>
+    <title>Мој распоред v4.2 Alpha</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -22,6 +22,7 @@
             --accent: #0f172a;
             --border: #e2e8f0;
             --card-radius: 20px;
+            --blue-soft: #e0f2fe;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -32,6 +33,7 @@
                 --text-muted: #94a3b8;
                 --accent: #f8fafc;
                 --border: #1e293b;
+                --blue-soft: #0c4a6e;
             }
         }
 
@@ -61,36 +63,54 @@
             background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
         }
 
-        /* List Styling */
+        /* Унапређен изглед реда за раднике */
         .mesto-row { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 14px 0; border-bottom: 1px solid var(--border); 
+            padding: 16px 0; border-bottom: 1px solid var(--border); 
             cursor: pointer;
         }
-        .mesto-row:active { opacity: 0.6; }
+        .mesto-row:active { background: var(--blue-soft); border-radius: 12px; }
         .mesto-row:last-child { border-bottom: none; }
-        .mesto-info { display: flex; flex-direction: column; gap: 2px; }
+        
+        .mesto-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .mesto-name { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
-        .worker-name { font-size: 15px; font-weight: 700; color: var(--text); }
-        .swap-hint { font-size: 10px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+        .worker-name { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.3; }
+        
+        /* Клик за замену - увећан и јаснији */
+        .swap-hint { 
+            font-size: 12px; 
+            color: #3b82f6; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .edit-icon {
+            color: var(--text-muted);
+            opacity: 0.5;
+            padding-left: 10px;
+        }
 
         /* Modal for swapping */
         #swapModal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
             display: none; align-items: flex-end; z-index: 1000;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
         .modal-content {
-            background: var(--surface); width: 100%; max-height: 70vh;
+            background: var(--surface); width: 100%; max-height: 80vh;
             border-radius: 30px 30px 0 0; padding: 24px;
-            overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+            overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.2);
         }
-        .modal-header { font-weight: 800; font-size: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .modal-header { font-weight: 800; font-size: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        
         .worker-option { 
-            padding: 16px; border-bottom: 1px solid var(--border); 
-            font-weight: 600; font-size: 16px;
+            padding: 18px; border-bottom: 1px solid var(--border); 
+            font-weight: 600; font-size: 17px; color: var(--text);
         }
-        .worker-option:active { background: var(--bg); }
+        .worker-option:active { background: var(--blue-soft); }
 
         /* Navigation */
         .nav { 
@@ -135,13 +155,13 @@
                 <option value="3">Трећа смена</option>
             </select>
         </div>
-        <div class="card" id="lista-prikaz" style="padding: 10px 20px;"></div>
+        <div class="card" id="lista-prikaz" style="padding: 5px 20px;"></div>
     </div>
 </div>
 
 <div id="swapModal">
     <div class="modal-content">
-        <div class="modal-header">Изаберите замену <span onclick="closeModal()" style="color: var(--text-muted);">✕</span></div>
+        <div class="modal-header">Замена службеника <span onclick="closeModal()" style="font-size: 24px; padding: 5px;">✕</span></div>
         <div id="workerList"></div>
     </div>
 </div>
@@ -154,7 +174,7 @@
 
 <script>
 let rawData = [];
-let replacements = {}; // Објекат за чување привремених замена
+let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
@@ -224,13 +244,17 @@ function renderList() {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const key = `${dan}-${smena}-${m}`;
-        const displayName = replacements[key] ? `${replacements[key]} уместо ${originalIme}` : originalIme;
+        const isReplaced = replacements[key];
+        const displayName = isReplaced ? `${isReplaced} <span style="color:#64748b; font-weight:500;">уместо</span> ${originalIme}` : originalIme;
 
         html += `<div class="mesto-row" onclick="openSwap('${m}')">
             <div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
-                ${originalIme !== "—" ? '<span class="swap-hint">Кликни за замену</span>' : ''}
+                ${originalIme !== "—" ? '<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени службеника</span>' : ''}
+            </div>
+            <div class="edit-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
             </div>
         </div>`;
     });
@@ -242,7 +266,6 @@ function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
     
-    // Сви јединствени радници из фајла за избор замене
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
     
     allWorkers.forEach(w => {
@@ -253,11 +276,11 @@ function openSwap(mesto) {
         listCont.appendChild(div);
     });
     
-    // Опција за ресетовање замене
     const resetDiv = document.createElement('div');
     resetDiv.className = 'worker-option';
-    resetDiv.style.color = 'red';
-    resetDiv.innerText = "Врати оригиналног радника";
+    resetDiv.style.color = '#ef4444';
+    resetDiv.style.marginTop = '10px';
+    resetDiv.innerText = "✖ Поништи замену";
     resetDiv.onclick = () => applySwap(null);
     listCont.appendChild(resetDiv);
 
@@ -269,19 +292,14 @@ function applySwap(workerName) {
     const smena = document.getElementById('smenaSel').value;
     const key = `${dan}-${smena}-${activeMesto}`;
     
-    if(workerName) {
-        replacements[key] = workerName;
-    } else {
-        delete replacements[key];
-    }
+    if(workerName) { replacements[key] = workerName; } 
+    else { delete replacements[key]; }
     
     closeModal();
     renderList();
 }
 
-function closeModal() {
-    document.getElementById('swapModal').style.display = 'none';
-}
+function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
 </script>
 </body>
 </html>
