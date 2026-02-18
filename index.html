@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.8.0 Exp-Alpha2</title>
+    <title>Мој распоред v4.8.0 Alpha 3</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -102,7 +102,7 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha2</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha3</div>
             <button onclick="clearAppData()" style="width:100%; padding:15px; border-radius:18px; border:1px solid #ef4444; background:transparent; color:#ef4444; font-weight:700;">Обриши податке</button>
         </div>
     </div>
@@ -110,7 +110,7 @@
 
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
     <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 15px;">Замена <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 15px;">Замена службеника <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
         <div id="workerList"></div>
     </div>
 </div>
@@ -166,9 +166,7 @@ document.getElementById('fileInput').onchange = function(e) {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
                 MESTA.forEach(m => {
-                    if(rowText.includes(m.toUpperCase()) || 
-                       (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) || 
-                       (m === "Управна зграда" && (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")))) {
+                    if(rowText.includes(m.toUpperCase()) || (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) || (m === "Управна зграда" && (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")))) {
                         currentMesto = m;
                     }
                 });
@@ -214,6 +212,7 @@ function renderList() {
             <div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
+                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
             </div>
             <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>
         </div>`;
@@ -233,21 +232,39 @@ function openSwap(mesto) {
         div.onclick = () => { const dan = document.getElementById('danSel').value; const smena = document.getElementById('smenaSel').value; replacements[`${dan}-${smena}-${activeMesto}`] = w; closeModal(); renderList(); };
         listCont.appendChild(div);
     });
+    const reset = document.createElement('div');
+    reset.style.padding = '18px'; reset.style.color = '#ef4444'; reset.style.fontWeight = '700'; reset.innerText = "✖ Поништи замену";
+    reset.onclick = () => { const dan = document.getElementById('danSel').value; const smena = document.getElementById('smenaSel').value; delete replacements[`${dan}-${smena}-${activeMesto}`]; closeModal(); renderList(); };
+    listCont.appendChild(reset);
     document.getElementById('swapModal').style.display = 'flex';
 }
 
 function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
+
 function generateText() {
-    const dan = document.getElementById('danSel').value;
+    const dan = parseInt(document.getElementById('danSel').value);
     const smena = document.getElementById('smenaSel').value;
-    let text = `ЂЕРДАП 1 - ${dan}. ${MESECI[new Date().getMonth()]}\n${document.getElementById('smenaSel').options[smena-1].text}\n\n`;
+    const now = new Date();
+    let d1 = new Date(now.getFullYear(), now.getMonth(), dan);
+    let datumStr = "";
+    
+    if (smena === "3") {
+        let d2 = new Date(now.getFullYear(), now.getMonth(), dan + 1);
+        datumStr = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}./${String(d2.getDate()).padStart(2, '0')}.${String(d2.getMonth() + 1).padStart(2, '0')}.${d2.getFullYear()}.`;
+    } else {
+        datumStr = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}.`;
+    }
+
+    let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
-        text += `${m}: ${isReplaced ? isReplaced + ' уместо ' + radnik.ime : (radnik ? radnik.ime : '—')}\n`;
+        text += `${m}: ${isReplaced ? isReplaced + ' уместо ' + originalIme : originalIme}\n`;
     });
     return text;
 }
+
 async function copyToClipboard() { await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList() { if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(); }
 function clearAppData() { if(confirm("Обрисати све?")) { localStorage.removeItem('raspored_data'); location.reload(); } }
@@ -263,4 +280,5 @@ scrollArea.ontouchmove = e => {
 scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) location.reload(); ptr.style.height = '0'; };
 </script>
 </body>
-</html>
+    </html>
+    
