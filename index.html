@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.4 Alpha</title>
+    <title>Мој распоред v4.5 Alpha</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -23,6 +23,7 @@
             --border: #e2e8f0;
             --card-radius: 20px;
             --blue-soft: #e0f2fe;
+            --primary: #3b82f6;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -40,10 +41,17 @@
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .app-bar { padding: 60px 24px 10px; background: transparent; flex-shrink: 0; }
+        /* Pull to Refresh Indicator */
+        #ptr-indicator {
+            height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            background: var(--bg); color: var(--text-muted); font-size: 13px; font-weight: 600;
+            transition: height 0.2s;
+        }
+
+        .app-bar { padding: 50px 24px 10px; background: transparent; flex-shrink: 0; }
         .app-bar h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -1px; }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; }
+        .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; position: relative; }
 
         .card { 
             background: var(--surface); border-radius: var(--card-radius); 
@@ -59,16 +67,24 @@
             background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
         }
 
+        /* Vraćene ikonice i bolji izgled reda */
         .mesto-row { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 16px 0; border-bottom: 1px solid var(--border); cursor: pointer;
         }
         .mesto-row:active { background: var(--blue-soft); border-radius: 12px; }
         .mesto-row:last-child { border-bottom: none; }
+        
         .mesto-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .mesto-name { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
         .worker-name { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.3; }
-        .swap-hint { font-size: 12px; color: #3b82f6; font-weight: 700; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        
+        .swap-hint { 
+            font-size: 12px; color: var(--primary); font-weight: 700; 
+            display: flex; align-items: center; gap: 4px; margin-top: 4px; 
+        }
+
+        .side-arrow { color: var(--text-muted); opacity: 0.4; margin-left: 10px; }
 
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
         .btn-action { 
@@ -105,9 +121,10 @@
 </head>
 <body>
 
+<div id="ptr-indicator">Повуци за освежавање...</div>
 <div class="app-bar"><h1 id="page-title">Увоз</h1></div>
 
-<div class="main-content">
+<div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
         <div class="card" style="text-align: center; padding: 40px 20px;">
             <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--bg); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
@@ -158,6 +175,28 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
 let activeMesto = null;
+
+// Pull to Refresh Logic
+let touchStart = 0;
+const scrollArea = document.getElementById('scroll-area');
+const ptr = document.getElementById('ptr-indicator');
+
+scrollArea.addEventListener('touchstart', e => { touchStart = e.touches[0].pageY; });
+scrollArea.addEventListener('touchmove', e => {
+    let touchMove = e.touches[0].pageY;
+    if (scrollArea.scrollTop === 0 && touchMove > touchStart) {
+        let diff = touchMove - touchStart;
+        if (diff < 100) ptr.style.height = diff + 'px';
+    }
+});
+scrollArea.addEventListener('touchend', e => {
+    if (parseInt(ptr.style.height) > 60) {
+        ptr.innerText = "Освежавам...";
+        setTimeout(() => { location.reload(); }, 500);
+    } else {
+        ptr.style.height = '0';
+    }
+});
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
@@ -222,8 +261,19 @@ function renderList() {
         const originalIme = radnik ? radnik.ime : "—";
         const key = `${dan}-${smena}-${m}`;
         const isReplaced = replacements[key];
-        const displayName = isReplaced ? `${isReplaced} <span style="color:#64748b; font-weight:500;">уместо</span> ${originalIme}` : originalIme;
-        html += `<div class="mesto-row" onclick="openSwap('${m}')"><div class="mesto-info"><span class="mesto-name">${m}</span><span class="worker-name">${displayName}</span>${originalIme !== "—" ? '<span class="swap-hint">Замени службеника</span>' : ''}</div></div>`;
+        const displayName = isReplaced ? `${isReplaced} <span style="color:var(--text-muted); font-weight:500;">уместо</span> ${originalIme}` : originalIme;
+        
+        html += `<div class="mesto-row" onclick="openSwap('${m}')">
+            <div class="mesto-info">
+                <span class="mesto-name">${m}</span>
+                <span class="worker-name">${displayName}</span>
+                ${originalIme !== "—" ? `<span class="swap-hint">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
+            </div>
+            <div class="side-arrow">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+            </div>
+        </div>`;
     });
     container.innerHTML = html;
     if(rawData.length > 0) document.getElementById('action-buttons').style.display = 'grid';
@@ -269,7 +319,6 @@ function generateText() {
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
         let n = m;
-        // Коначне исправке назива према твом захтеву
         if(m === "Пут Кладово Текија") n = "Пут Кладово-Текија";
         if(m === "Депонија Нови Сип") n = "Депонија Нови Сип";
         text += `${n}: ${isReplaced ? isReplaced + ' уместо ' + originalIme : originalIme}\n`;
