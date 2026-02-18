@@ -7,55 +7,80 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
-    <meta name="theme-color" content="#1e293b">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #f8fafc;
+            --bg: #f1f5f9;
             --surface: #ffffff;
             --text: #0f172a;
             --text-muted: #64748b;
-            --primary: #1e293b;
-            --accent: #3b82f6;
+            --accent: #0284c7;
             --border: #e2e8f0;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-radius: 24px;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg: #0f172a;
-                --surface: #1e293b;
-                --text: #f1f5f9;
+                --bg: #020617;
+                --surface: #0f172a;
+                --text: #f8fafc;
                 --text-muted: #94a3b8;
-                --primary: #334155;
-                --accent: #60a5fa;
-                --border: #444b5a;
+                --accent: #38bdf8;
+                --border: #1e293b;
             }
         }
 
-        * { font-family: 'Inter', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .app-bar { padding: 50px 20px 20px; background: var(--surface); border-bottom: 1px solid var(--border); z-index: 10; flex-shrink: 0; }
-        .app-bar h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.8px; }
+        /* Modern Title Bar */
+        .app-bar { padding: 60px 24px 20px; background: transparent; flex-shrink: 0; }
+        .app-bar h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 20px 16px 160px; scroll-behavior: smooth; }
+        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 180px; scroll-behavior: smooth; }
 
-        .section-card { background: var(--surface); border-radius: 20px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--card-shadow); margin-bottom: 16px; }
+        /* Premium Bento Cards */
+        .card { 
+            background: var(--surface); 
+            border-radius: var(--card-radius); 
+            padding: 24px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            margin-bottom: 16px; 
+        }
         
-        .upload-area { text-align: center; border: 2px dashed var(--border); background: rgba(59, 130, 246, 0.03); }
-        .btn-main { background: var(--accent); color: white; padding: 14px 28px; border-radius: 14px; display: inline-block; font-weight: 700; margin-top: 15px; cursor: pointer; border: none; box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3); }
+        .upload-area { 
+            text-align: center; 
+            background: linear-gradient(135deg, rgba(2,132,199,0.05) 0%, rgba(56,189,248,0.05) 100%);
+            border: 2px dashed var(--accent);
+        }
 
-        /* Стизализовани селектори са стрелицом */
-        .controls { display: grid; gap: 12px; margin-bottom: 20px; }
+        .btn-main { 
+            background: var(--accent); 
+            color: white; 
+            padding: 16px 32px; 
+            border-radius: 18px; 
+            display: inline-block; 
+            font-weight: 700; 
+            font-size: 15px;
+            margin-top: 20px; 
+            cursor: pointer; 
+            border: none;
+            box-shadow: 0 10px 20px -5px rgba(2,132,199,0.4);
+        }
+
+        /* Selectors */
+        .controls { display: grid; gap: 12px; margin-bottom: 24px; }
+        .select-wrapper { position: relative; }
         select { 
             width: 100%; 
-            padding: 16px 45px 16px 16px; 
-            border-radius: 14px; 
+            padding: 18px 20px; 
+            border-radius: 20px; 
             border: 1px solid var(--border); 
             background: var(--surface); 
             color: var(--text); 
@@ -63,37 +88,81 @@
             font-weight: 600; 
             outline: none; 
             appearance: none;
-            /* SVG стрелица */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 16px center;
+            background-position: right 20px center;
             background-size: 18px;
         }
 
-        .mesto-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+        /* List Items */
+        .mesto-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 18px 0; 
+            border-bottom: 1px solid var(--border); 
+        }
         .mesto-row:last-child { border-bottom: none; }
-        .mesto-name { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-        .worker-name { font-size: 16px; font-weight: 700; color: var(--text); text-align: right; margin-left: 10px; }
+        
+        .mesto-info { display: flex; flex-direction: column; gap: 4px; }
+        .mesto-name { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .worker-name { font-size: 17px; font-weight: 700; color: var(--text); }
 
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; border-top: 1px solid var(--border); padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); gap: 8px; backdrop-filter: blur(10px); background: rgba(var(--surface), 0.9); z-index: 100; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; border-radius: 16px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; }
-        .nav-item span { font-size: 22px; margin-bottom: 4px; }
-        .nav-item label { font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .nav-item.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        /* Indicators for shifts */
+        .shift-badge {
+            width: 8px;
+            height: 24px;
+            border-radius: 4px;
+            margin-left: 12px;
+        }
+        .s1 { background: #38bdf8; } /* Прва */
+        .s2 { background: #fb923c; } /* Друга */
+        .s3 { background: #818cf8; } /* Трећа */
+
+        /* Navigation */
+        .nav { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 20px; 
+            right: 20px; 
+            background: rgba(var(--surface-rgb), 0.8); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex; 
+            border: 1px solid var(--border);
+            padding: 8px; 
+            border-radius: 28px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            z-index: 100; 
+        }
+        .nav-item { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 12px; 
+            border-radius: 22px; 
+            color: var(--text-muted); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item span { font-size: 22px; margin-bottom: 2px; }
+        .nav-item label { font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .nav-item.active { background: var(--accent); color: white; }
 
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="app-bar"><h1 id="page-title">Увоз података</h1></div>
+<div class="app-bar"><h1 id="page-title">Увоз</h1></div>
 
 <div class="main-content">
     <div id="tab-u" class="tab-pane">
-        <div class="section-card upload-area">
-            <div style="font-size: 40px; margin-bottom: 15px;">📁</div>
-            <div style="font-size: 18px; font-weight: 700;">План рада</div>
-            <p style="font-size: 14px; color: var(--text-muted); margin: 10px 0 20px;">Учитајте важећи распоред у .xlsx формату</p>
+        <div class="card upload-area">
+            <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+            <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">План рада</div>
+            <p style="font-size: 15px; color: var(--text-muted); margin: 8px 0 20px;">Учитајте Excel документ са распоредом за текући месец.</p>
             <label class="btn-main">Изабери фајл<input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden"></label>
         </div>
     </div>
@@ -107,19 +176,19 @@
                 <option value="3">Трећа смена</option>
             </select>
         </div>
-        <div class="section-card" id="lista-prikaz"></div>
+        <div class="card" id="lista-prikaz" style="padding-top: 10px; padding-bottom: 10px;"></div>
     </div>
 
     <div id="tab-t" class="tab-pane hidden">
-        <div class="section-card" style="text-align: center; padding: 40px 20px;">
-            <div style="font-size: 30px; margin-bottom: 10px;">📉</div>
-            <p style="color: var(--text-muted); font-weight: 500;">Анализа сати и статистика се припремају за Бета верзији.</p>
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
+            <p style="color: var(--text-muted); font-weight: 600; font-size: 16px;">Статистика и радни сати ће бити доступни након финализације дизајна.</p>
         </div>
     </div>
 </div>
 
 <div class="nav">
-    <div class="nav-item active" onclick="showTab('u', 'Увоз података', this)"><span>📥</span><label>Увоз</label></div>
+    <div class="nav-item active" onclick="showTab('u', 'Увоз', this)"><span>📥</span><label>Увоз</label></div>
     <div class="nav-item" onclick="showTab('s', 'Дневни план', this)"><span>📅</span><label>План</label></div>
     <div class="nav-item" onclick="showTab('t', 'Статистика', this)"><span>📈</span><label>Сати</label></div>
 </div>
@@ -129,8 +198,6 @@ let rawData = [];
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
-
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
@@ -146,39 +213,26 @@ document.getElementById('fileInput').onchange = function(e) {
         const data = new Uint8Array(ex.target.result);
         const wb = XLSX.read(data, {type: 'array'});
         rawData = [];
-
         wb.SheetNames.forEach(sheetName => {
             const sheet = wb.Sheets[sheetName];
             const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
             let currentMesto = "";
-            
             rows.forEach(row => {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
                 MESTA.forEach(m => {
                     if(rowText.includes(m.toUpperCase()) || 
                        (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) ||
-                       (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА")) ||
-                       (m === "Управна зграда" && rowText.includes("УПРАВН"))) {
+                       (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА"))) {
                         currentMesto = m;
                     }
                 });
-                
                 if(/^\d+/.test(String(row[0]).trim()) && String(row[1]).length > 2 && currentMesto) {
-                    rawData.push({
-                        ime: String(row[1]).trim(),
-                        mesto: currentMesto,
-                        raspored: row.slice(2).map(s => s ? String(s).trim().toUpperCase() : "")
-                    });
+                    rawData.push({ ime: String(row[1]).trim(), mesto: currentMesto, raspored: row.slice(2).map(s => s ? String(s).trim().toUpperCase() : "") });
                 }
             });
         });
-
-        if(rawData.length > 0) {
-            setupFilters();
-            renderList();
-            showTab('s', 'Дневни план', document.querySelectorAll('.nav-item')[1]);
-        }
+        if(rawData.length > 0) { setupFilters(); renderList(); showTab('s', 'Дневни план', document.querySelectorAll('.nav-item')[1]); }
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
@@ -188,7 +242,6 @@ function setupFilters() {
     sel.innerHTML = "";
     const now = new Date();
     const maxDays = Math.max(...rawData.map(r => r.raspored.length));
-
     for(let i=1; i<=maxDays; i++) {
         let d = new Date(now.getFullYear(), now.getMonth(), i);
         let opt = document.createElement('option');
@@ -196,8 +249,7 @@ function setupFilters() {
         opt.innerText = `${i}. ${MESECI[now.getMonth()]} (${DANI[d.getDay()]})`;
         sel.appendChild(opt);
     }
-    const today = now.getDate();
-    if(today <= maxDays) sel.value = today;
+    sel.value = now.getDate() <= maxDays ? now.getDate() : 1;
     sel.onchange = renderList;
     document.getElementById('smenaSel').onchange = renderList;
 }
@@ -209,7 +261,13 @@ function renderList() {
     let html = "";
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
-        html += `<div class="mesto-row"><span class="mesto-name">${m}</span><span class="worker-name">${radnik ? radnik.ime : "—"}</span></div>`;
+        html += `<div class="mesto-row">
+            <div class="mesto-info">
+                <span class="mesto-name">${m}</span>
+                <span class="worker-name">${radnik ? radnik.ime : "—"}</span>
+            </div>
+            <div class="shift-badge s${smena}"></div>
+        </div>`;
     });
     container.innerHTML = html;
 }
