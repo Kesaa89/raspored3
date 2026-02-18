@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.9.4 - Date Fix</title>
+    <title>Мој распоред v4.9.6</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -121,7 +121,7 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card" style="padding: 20px;">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.4 Date Fix</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.6 Stable</div>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши податке</button>
         </div>
     </div>
@@ -129,7 +129,7 @@
 
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
     <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span></div>
         <div id="workerList"></div>
     </div>
 </div>
@@ -283,7 +283,10 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 
-function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
+function closeModal() { 
+    haptic(25); // Суптилна вибрација на затварање
+    document.getElementById('swapModal').style.display = 'none'; 
+}
 
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
@@ -318,7 +321,6 @@ function generateText() {
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
 
-// ПОПРАВЉЕН ДЕО: Прво тресе, па пита
 function clearAppData() { 
     haptic(100); 
     setTimeout(() => {
