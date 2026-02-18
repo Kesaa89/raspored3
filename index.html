@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.9.0 - Dashboard</title>
+    <title>Мој распоред v4.9.1 - Fix</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -47,15 +47,9 @@
         
         .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; position: relative; }
 
-        /* DASHBOARD STYLES */
         .welcome-card { background: var(--primary-container); color: var(--on-primary-container); border-radius: var(--card-radius); padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
         .welcome-card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
         .welcome-card p { margin: 0; opacity: 0.8; font-weight: 600; font-size: 14px; }
-
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-item { background: var(--surface-variant); padding: 16px; border-radius: 24px; border: 1px solid var(--border); }
-        .stat-label { font-size: 11px; font-weight: 800; text-transform: uppercase; opacity: 0.6; margin-bottom: 4px; display: block; }
-        .stat-value { font-size: 16px; font-weight: 700; }
 
         .live-preview { background: var(--surface-variant); border-radius: var(--card-radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .live-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -63,11 +57,9 @@
         .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; }
 
         .mini-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .mini-row:last-child { border: none; }
         .mini-mesto { font-size: 13px; opacity: 0.7; font-weight: 600; }
         .mini-ime { font-size: 14px; font-weight: 700; }
 
-        /* OLD COMPONENTS */
         .tab-pane { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -98,24 +90,22 @@
 
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
-        <div id="dashboard-content">
-            </div>
-        
-        <div class="card" style="text-align: center; background: transparent; border: 2px dashed var(--border);">
-            <p style="font-size: 13px; font-weight: 700; opacity: 0.6; margin-bottom: 15px;">АЖУРИРАЈ РАСПОРЕД (XLSX)</p>
-            <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto; font-size: 14px;">
-                Изабери нови фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+        <div id="dashboard-content"></div>
+        <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent;">
+            <p style="font-size: 12px; font-weight: 800; opacity: 0.5; margin-bottom: 12px;">АЖУРИРАЈ ПОДАТКЕ (XLSX)</p>
+            <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto;">
+                Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
             </label>
         </div>
     </div>
 
     <div id="tab-s" class="tab-pane hidden">
         <div class="controls">
-            <select id="danSel" onchange="haptic(40)"></select>
-            <select id="smenaSel" onchange="haptic(40)"><option value="1">Прва смена</option><option value="2">Друга смена</option><option value="3">Трећа смена</option></select>
+            <select id="danSel" onchange="haptic(40); renderList()"></select>
+            <select id="smenaSel" onchange="haptic(40); renderList()"><option value="1">Прва смена</option><option value="2">Друга смена</option><option value="3">Трећа смена</option></select>
         </div>
         <div id="lista-prikaz"></div>
-        <div class="actions" id="action-buttons" style="display: none; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+        <div class="actions" id="action-buttons" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
             <button class="btn-action ripple" onclick="copyToClipboard(event)">Копирај</button>
             <button class="btn-action primary ripple" onclick="shareList(event)">Подели</button>
         </div>
@@ -123,7 +113,7 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.0 Dashboard</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.1 Fixed</div>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444;">Обриши податке</button>
         </div>
     </div>
@@ -131,7 +121,7 @@
 
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
     <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 15px;">Замена службеника <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена службеника <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
         <div id="workerList"></div>
     </div>
 </div>
@@ -150,6 +140,20 @@ const MESECI = ["Јануар", "Фебруар", "Март", "Април", "М�
 
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 
+function createRipple(event) {
+    const button = event.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add("ripple-effect");
+    const ripple = button.getElementsByClassName("ripple-effect")[0];
+    if (ripple) ripple.remove();
+    button.appendChild(circle);
+}
+
 function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
     if (saved) {
@@ -157,11 +161,7 @@ function checkStorage() {
         setupFilters();
         renderDashboard();
     } else {
-        document.getElementById('dashboard-content').innerHTML = `
-            <div class="welcome-card">
-                <h2>Добродошли</h2>
-                <p>Учитајте XLSX фајл са распоредом да бисте почели.</p>
-            </div>`;
+        document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>Добродошли</h2><p>Учитајте распоред да бисте почели.</p></div>`;
     }
 }
 
@@ -169,60 +169,24 @@ function renderDashboard() {
     const now = new Date();
     const dan = now.getDate();
     const hour = now.getHours();
-    let smena = "1";
-    if (hour >= 15 && hour < 23) smena = "2"; else if (hour >= 23 || hour < 7) smena = "3";
-
+    let smena = hour >= 15 && hour < 23 ? "2" : (hour >= 23 || hour < 7 ? "3" : "1");
     const greeting = hour < 12 ? "Добро јутро" : (hour < 18 ? "Добар дан" : "Добро вече");
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
-    // Get key workers for preview
     const keyPositions = ["Портирница", "Патрола 1", "Мост"];
     let previewHtml = "";
     keyPositions.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
-        previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${radnik ? radnik.ime : '—'}</span></div>`;
+        const replKey = `${dan}-${smena}-${m}`;
+        const ime = replacements[replKey] ? replacements[replKey] : (radnik ? radnik.ime : "—");
+        previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
     });
 
     document.getElementById('dashboard-content').innerHTML = `
-        <div class="welcome-card">
-            <h2>${greeting}!</h2>
-            <p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Тренутно је у току <b>${smenaNaziv}</b> смена.</p>
-        </div>
-        
-        <div class="live-preview">
-            <div class="live-header">
-                <span>Тренутно на дужности</span>
-                <div class="live-dot"></div>
-            </div>
-            ${previewHtml}
-            <div style="margin-top: 15px; text-align: center;">
-                <button class="btn-action" onclick="showTab('s', 'План', document.querySelectorAll('.nav-item')[1])" style="padding: 10px 20px; font-size: 13px; border-radius: 15px;">Види целу смену</button>
-            </div>
-        </div>
-
-        <div class="stat-grid">
-            <div class="stat-item">
-                <span class="stat-label">Месец</span>
-                <span class="stat-value">${MESECI[now.getMonth()]}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">База</span>
-                <span class="stat-value">Ђердап 1</span>
-            </div>
-        </div>
-    `;
+        <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
+        <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>`;
 }
 
-function showTab(tabId, title, el) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
-    document.getElementById('tab-' + tabId).classList.remove('hidden');
-    document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
-    if(el) { el.classList.add('active'); haptic(45); }
-    document.getElementById('page-title').innerText = title;
-    if(tabId === 's') renderList();
-}
-
-// Logic for Excel, List and Share stays identical to v4.8.0 to ensure stability
 document.getElementById('fileInput').onchange = function(e) {
     const reader = new FileReader();
     reader.onload = function(ex) {
@@ -235,7 +199,13 @@ document.getElementById('fileInput').onchange = function(e) {
             rows.forEach(row => {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
-                MESTA.forEach(m => { if(rowText.includes(m.toUpperCase())) currentMesto = m; });
+                MESTA.forEach(m => {
+                    let match = false;
+                    if(m === "Пут Кладово Текија") match = rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО");
+                    else if(m === "Управна зграда") match = rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА");
+                    else match = rowText.includes(m.toUpperCase());
+                    if(match) currentMesto = m;
+                });
                 if(/^\d+/.test(String(row[0]).trim()) && String(row[1]).length > 2 && currentMesto) {
                     rawData.push({ ime: String(row[1]).trim(), mesto: currentMesto, raspored: row.slice(2).map(s => s ? String(s).trim().toUpperCase() : "") });
                 }
@@ -257,9 +227,6 @@ function setupFilters() {
         sel.appendChild(opt);
     }
     sel.value = now.getDate();
-    const hour = now.getHours();
-    let smena = "1"; if (hour >= 15 && hour < 23) smena = "2"; else if (hour >= 23 || hour < 7) smena = "3";
-    document.getElementById('smenaSel').value = smena;
 }
 
 function renderList() {
@@ -271,11 +238,11 @@ function renderList() {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
-        const displayName = isReplaced ? `${isReplaced} <small>уместо</small> ${originalIme}` : originalIme;
+        const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
         
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
-        row.onclick = (e) => { haptic(30); openSwap(m); };
+        row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
         row.innerHTML = `<div class="mesto-info"><span class="mesto-name">${m}</span><span class="worker-name">${displayName}</span></div>`;
         container.appendChild(row);
     });
@@ -288,12 +255,13 @@ function openSwap(mesto) {
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
     allWorkers.forEach(w => {
         const div = document.createElement('div');
-        div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
-        div.onclick = () => { 
-            const dan = document.getElementById('danSel').value; 
-            const smena = document.getElementById('smenaSel').value; 
-            replacements[`${dan}-${smena}-${mesto}`] = w; 
-            closeModal(); renderList(); renderDashboard();
+        div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.innerText = w;
+        div.onclick = (e) => {
+            createRipple(e);
+            const dan = document.getElementById('danSel').value;
+            const smena = document.getElementById('smenaSel').value;
+            replacements[`${dan}-${smena}-${mesto}`] = w;
+            setTimeout(() => { closeModal(); renderList(); renderDashboard(); }, 150);
         };
         listCont.appendChild(div);
     });
@@ -302,27 +270,40 @@ function openSwap(mesto) {
 
 function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
 
-async function copyToClipboard(e) { 
-    haptic([70, 50, 70]); 
-    let text = "ЂЕРДАП 1\n" + generateText();
-    await navigator.clipboard.writeText(text); 
-    document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); 
-}
-
 function generateText() {
-    const dan = document.getElementById('danSel').value;
+    const dan = parseInt(document.getElementById('danSel').value);
     const smena = document.getElementById('smenaSel').value;
-    let text = "";
+    const now = new Date();
+    let d1 = new Date(now.getFullYear(), now.getMonth(), dan);
+    let datumStr = "";
+    if (smena === "3") {
+        let d2 = new Date(now.getFullYear(), now.getMonth(), dan + 1);
+        datumStr = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}./${String(d2.getDate()).padStart(2, '0')}.${String(d2.getMonth() + 1).padStart(2, '0')}.${d2.getFullYear()}.`;
+    } else {
+        datumStr = `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}.`;
+    }
+    
+    let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
-        text += `${m}: ${isReplaced ? isReplaced + ' уместо ' + radnik.ime : (radnik ? radnik.ime : '—')}\n`;
+        text += `${m}: ${isReplaced ? isReplaced + ' уместо ' + originalIme : originalIme}\n`;
     });
     return text;
 }
 
+async function copyToClipboard(e) { haptic([70, 50]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
+async function shareList(e) { haptic([70, 50]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+function showTab(tabId, title, el) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+    if(el) { el.classList.add('active'); haptic(40); }
+    document.getElementById('page-title').innerText = title;
+    if(tabId === 's') renderList();
+}
 function clearAppData() { if(confirm("Обрисати све?")) { localStorage.clear(); location.reload(); } }
-function createRipple(e) { /* Иста логика као пре */ }
 </script>
 </body>
 </html>
