@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.8.0 Alpha 4</title>
+    <title>Мој распоред v4.8.0 Alpha 5 (Haptic)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -46,7 +46,6 @@
         
         .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; position: relative; }
 
-        /* Tab Transition */
         .tab-pane { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -69,7 +68,7 @@
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 6px; }
 
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-        .btn-action { position: relative; overflow: hidden; background: var(--surface-variant); border: 1px solid var(--border); padding: 18px; border-radius: 22px; font-weight: 800; font-size: 15px; color: var(--on-surface); }
+        .btn-action { position: relative; overflow: hidden; background: var(--surface-variant); border: 1px solid var(--border); padding: 18px; border-radius: 22px; font-weight: 800; font-size: 15px; color: var(--on-surface); text-align: center; }
         .btn-action.primary { background: var(--primary); color: var(--bg); border: none; }
 
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
@@ -92,7 +91,7 @@
             <div class="upload-icon-box">
                 <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
-            <label class="btn-action primary" style="display: inline-block; cursor: pointer; padding: 18px 36px;">
+            <label class="btn-action primary" style="display: inline-block; cursor: pointer; padding: 18px 36px; width: auto;">
                 Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
             </label>
         </div>
@@ -100,8 +99,8 @@
 
     <div id="tab-s" class="tab-pane hidden">
         <div class="controls">
-            <select id="danSel"></select>
-            <select id="smenaSel"><option value="1">Прва смена</option><option value="2">Друга смена</option><option value="3">Трећа смена</option></select>
+            <select id="danSel" onchange="haptic(10)"></select>
+            <select id="smenaSel" onchange="haptic(10)"><option value="1">Прва смена</option><option value="2">Друга смена</option><option value="3">Трећа смена</option></select>
         </div>
         <div id="lista-prikaz"></div>
         <div class="actions" id="action-buttons" style="display: none;">
@@ -112,7 +111,8 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha4</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha5</div>
+            <div style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;">Додата хаптичка повратна информација.</div>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444;">Обриши податке</button>
         </div>
     </div>
@@ -138,7 +138,13 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
 
-// RIPPLE LOGIC
+// HAPTIC FEEDBACK
+function haptic(ms = 15) {
+    if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(ms);
+    }
+}
+
 function createRipple(event) {
     const button = event.currentTarget;
     const circle = document.createElement("span");
@@ -174,11 +180,16 @@ function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
-    if(el) { el.classList.add('active'); createRipple({currentTarget: el, clientX: el.getBoundingClientRect().left + 20, clientY: el.getBoundingClientRect().top + 20}); }
+    if(el) { 
+        el.classList.add('active'); 
+        haptic(10);
+        createRipple({currentTarget: el, clientX: el.getBoundingClientRect().left + 20, clientY: el.getBoundingClientRect().top + 20}); 
+    }
     document.getElementById('page-title').innerText = title;
 }
 
 document.getElementById('fileInput').onchange = function(e) {
+    haptic(20);
     const reader = new FileReader();
     reader.onload = function(ex) {
         const data = new Uint8Array(ex.target.result);
@@ -218,7 +229,7 @@ function setupFilters() {
         sel.appendChild(opt);
     }
     sel.value = now.getDate() <= maxDays ? now.getDate() : 1;
-    sel.onchange = renderList; document.getElementById('smenaSel').onchange = renderList;
+    sel.onchange = () => { haptic(10); renderList(); };
 }
 
 function renderList() {
@@ -235,7 +246,7 @@ function renderList() {
         
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
-        row.onclick = (e) => { createRipple(e); setTimeout(() => openSwap(m), 200); };
+        row.onclick = (e) => { haptic(15); createRipple(e); setTimeout(() => openSwap(m), 150); };
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
@@ -257,7 +268,7 @@ function openSwap(mesto) {
         div.className = "ripple";
         div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
         div.onclick = (e) => { 
-            createRipple(e); 
+            haptic(15); createRipple(e);
             const dan = document.getElementById('danSel').value; 
             const smena = document.getElementById('smenaSel').value; 
             replacements[`${dan}-${smena}-${activeMesto}`] = w; 
@@ -269,7 +280,7 @@ function openSwap(mesto) {
     reset.className = "ripple";
     reset.style.padding = '18px'; reset.style.color = '#ef4444'; reset.style.fontWeight = '700'; reset.innerText = "✖ Поништи замену";
     reset.onclick = (e) => { 
-        createRipple(e);
+        haptic(20); createRipple(e);
         const dan = document.getElementById('danSel').value; 
         const smena = document.getElementById('smenaSel').value; 
         delete replacements[`${dan}-${smena}-${activeMesto}`]; 
@@ -279,7 +290,7 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 
-function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
+function closeModal() { haptic(5); document.getElementById('swapModal').style.display = 'none'; }
 
 function generateText() {
     const dan = parseInt(document.getElementById('danSel').value);
@@ -303,9 +314,9 @@ function generateText() {
     return text;
 }
 
-async function copyToClipboard(e) { createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
-async function shareList(e) { createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
-function clearAppData() { if(confirm("Обрисати све?")) { localStorage.removeItem('raspored_data'); location.reload(); } }
+async function copyToClipboard(e) { haptic(30); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
+async function shareList(e) { haptic(30); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+function clearAppData() { haptic(50); if(confirm("Обрисати све?")) { localStorage.removeItem('raspored_data'); location.reload(); } }
 
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
@@ -315,7 +326,7 @@ scrollArea.ontouchmove = e => {
     let diff = e.touches[0].pageY - touchStart;
     if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
 };
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) location.reload(); ptr.style.height = '0'; };
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic(25); location.reload(); } ptr.style.height = '0'; };
 </script>
 </body>
 </html>
