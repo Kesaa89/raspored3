@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Мој распоред v4.0 Alpha</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b57d0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0b57d0;
+            --surface: #f3f6fc;
+            --container: #ffffff;
+            --on-container: #1f1f1f;
+            --outline: #c4c7c5;
+            --accent: #d3e3fd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #a8c7fa;
+                --surface: #1a1c1e;
+                --container: #212327;
+                --on-container: #e3e3e3;
+                --outline: #444746;
+                --accent: #004a77;
+            }
+        }
+
+        * { font-family: 'Google Sans', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--surface); color: var(--on-container); margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+
+        .app-bar { padding: 48px 24px 16px; font-size: 24px; font-weight: 700; }
+        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px; scroll-behavior: smooth; }
+
+        .bento-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: var(--container); border-radius: 28px; padding: 20px; border: 1px solid transparent; }
+        .full { grid-column: span 2; }
+        
+        .upload-zone { background: var(--accent); text-align: center; padding: 40px 20px; }
+        .upload-btn { background: var(--primary); color: white; padding: 16px 32px; border-radius: 100px; display: inline-block; font-weight: 700; margin-top: 15px; cursor: pointer; }
+
+        .mesto-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--outline); }
+        .mesto-item:last-child { border-bottom: none; }
+        .radnik-tag { background: var(--accent); padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; min-width: 140px; text-align: center; }
+
+        .nav { position: fixed; bottom: 16px; left: 16px; right: 16px; background: var(--container); border-radius: 24px; height: 72px; display: flex; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1000; }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; opacity: 0.6; cursor: pointer; }
+        .nav-link.active { color: var(--primary); opacity: 1; }
+
+        .hidden { display: none; }
+        select { width:100%; padding:15px; border-radius:15px; border:1px solid var(--outline); background:none; color:inherit; font-weight:700; appearance: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-bar" id="page-title">Увоз распореда</div>
+
+<div class="main-content">
+    <div id="tab-u" class="tab-pane">
+        <div class="bento-grid">
+            <div class="card full upload-zone">
+                <div style="font-size: 40px;">📄</div>
+                <div style="font-size: 20px; font-weight: 700;">План рада</div>
+                <label class="upload-btn">
+                    Изабери фајл
+                    <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                </label>
+            </div>
+            <div class="card"><strong>Корак 1</strong><br>Учитај Excel</div>
+            <div class="card"><strong>Корак 2</strong><br>Одабери дан</div>
+        </div>
+    </div>
+
+    <div id="tab-s" class="tab-pane hidden">
+        <div class="card full" style="margin-bottom: 12px;">
+            <select id="danSel"></select>
+            <div style="height:10px;"></div>
+            <select id="smenaSel">
+                <option value="1">Прва смена</option>
+                <option value="2">Друга смена</option>
+                <option value="3">Трећа смена</option>
+            </select>
+        </div>
+        <div id="lista-prikaz" class="card full"></div>
+    </div>
+
+    <div id="tab-t" class="tab-pane hidden">
+        <div class="card full">Статистика ће бити додана у Бета верзији.</div>
+    </div>
+</div>
+
+<div class="nav">
+    <div class="nav-link active" onclick="showTab('u', 'Увоз распореда', this)"><span>📥</span>Увоз</div>
+    <div class="nav-link" onclick="showTab('s', 'Дневни распоред', this)"><span>📅</span>Распоред</div>
+    <div class="nav-link" onclick="showTab('t', 'Радни сати', this)"><span>📊</span>Сати</div>
+</div>
+
+<script>
+let rawData = [];
+const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Текија", "Магацин Караташ", "Депонија Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+    });
+}
+
+function showTab(tabId, title, el) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('page-title').innerText = title;
+}
+
+document.getElementById('fileInput').onchange = function(e) {
+    const reader = new FileReader();
+    reader.onload = function(ex) {
+        const data = new Uint8Array(ex.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        rawData = [];
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        
+        let currentMesto = "";
+        rows.forEach(row => {
+            if(!row[1]) return;
+            let text = row.join(" ").toUpperCase();
+            MESTA.forEach(m => { if(text.includes(m.toUpperCase())) currentMesto = m; });
+            
+            if(/^\d+/.test(String(row[0]).trim()) && currentMesto) {
+                rawData.push({
+                    ime: String(row[1]).trim(),
+                    mesto: currentMesto,
+                    raspored: row.slice(2).map(s => s ? String(s).trim() : "")
+                });
+            }
+        });
+        setupFilters();
+        renderList();
+        showTab('s', 'Дневни распоред', document.querySelectorAll('.nav-link')[1]);
+    };
+    reader.readAsArrayBuffer(e.target.files[0]);
+};
+
+function setupFilters() {
+    const sel = document.getElementById('danSel');
+    sel.innerHTML = "";
+    if (rawData.length > 0) {
+        const daysInMonth = rawData[0].raspored.length;
+        for(let i=1; i<=daysInMonth; i++) {
+            let opt = document.createElement('option');
+            opt.value = i; opt.innerText = i + ". Дан";
+            sel.appendChild(opt);
+        }
+    }
+    sel.onchange = renderList;
+    document.getElementById('smenaSel').onchange = renderList;
+}
+
+function renderList() {
+    const dan = document.getElementById('danSel').value;
+    const smena = document.getElementById('smenaSel').value;
+    const container = document.getElementById('lista-prikaz');
+    let html = "";
+    
+    MESTA.forEach(m => {
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        html += `<div class="mesto-item"><span>${m}</span><div class="radnik-tag">${radnik ? radnik.ime : "—"}</div></div>`;
+    });
+    container.innerHTML = html;
+}
+</script>
+</body>
+</html>
