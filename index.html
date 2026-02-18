@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.7.4 Alpha</title>
+    <title>Мој распоред v4.7.5 Alpha</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -65,7 +65,7 @@
         .hidden { display: none; }
     </style>
 </head>
-<body>
+<body onload="checkStorage()">
 
 <div id="toast">Списак копиран</div>
 <div id="ptr-indicator">Повуци за освежавање...</div>
@@ -78,7 +78,7 @@
                 <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
             <div class="upload-title">Распоред службе</div>
-            <div class="upload-text">Одаберите Excel фајл са распоредом за текући месец.</div>
+            <div class="upload-text" id="status-text">Одаберите Excel фајл са распоредом.</div>
             <label style="background: var(--accent); color: var(--surface); padding: 18px 36px; border-radius: 20px; display: inline-block; font-weight: 800; cursor: pointer;">
                 Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
             </label>
@@ -88,7 +88,11 @@
     <div id="tab-s" class="tab-pane hidden">
         <div class="controls">
             <select id="danSel"></select>
-            <select id="smenaSel"><option value="1">Прва смена</option><option value="2">Друга смена</option><option value="3">Трећа смена</option></select>
+            <select id="smenaSel">
+                <option value="1">Прва смена</option>
+                <option value="2">Друга смена</option>
+                <option value="3">Трећа смена</option>
+            </select>
         </div>
         <div class="card" id="lista-prikaz" style="padding: 10px 15px;"></div>
         <div class="actions" id="action-buttons" style="display: none; margin-bottom: 20px;">
@@ -99,11 +103,13 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 15px; color: var(--primary);">Дневник измена v4.7.4</div>
-            <div style="font-size: 14px; line-height: 1.6;">
-                • Поправљена функција "Повуци за освежавање" (PTR).<br>
-                • Враћен индикатор стрелице у редовима са именима.<br>
-                • Оптимизована висина апликационе траке за бољу прегледност.
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 15px; color: var(--primary);">Систем</div>
+            <button onclick="clearAppData()" style="width:100%; padding:15px; border-radius:15px; border:1px solid #ef4444; background:transparent; color:#ef4444; font-weight:700;">Обриши меморију апликације</button>
+            <div style="margin-top:20px; font-size:14px; line-height:1.6;">
+                <strong>v4.7.5 Alpha</strong><br>
+                • Уведено трајно чување распореда.<br>
+                • Аутоматско бирање смене према сату.<br>
+                • Оптимизација меморије.
             </div>
         </div>
     </div>
@@ -129,7 +135,35 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
 
-// ПУЛ ТО РЕФРЕШ ЛОГИКА
+// ПРОВЕРА МЕМОРИЈЕ
+function checkStorage() {
+    const saved = localStorage.getItem('raspored_data');
+    if (saved) {
+        rawData = JSON.parse(saved);
+        document.getElementById('status-text').innerText = "Распоред је учитан из меморије.";
+        setupFilters();
+        autoSetSmena(); // Аутоматска смена
+        renderList();
+        showTab('s', 'Дневни план', document.querySelectorAll('.nav-item')[1]);
+    }
+}
+
+function clearAppData() {
+    if(confirm("Да ли сте сигурни да желите да обришете сачувани распоред?")) {
+        localStorage.removeItem('raspored_data');
+        location.reload();
+    }
+}
+
+function autoSetSmena() {
+    const hour = new Date().getHours();
+    let smena = "1";
+    if (hour >= 15 && hour < 23) smena = "2";
+    else if (hour >= 23 || hour < 7) smena = "3";
+    document.getElementById('smenaSel').value = smena;
+}
+
+// ПУЛ ТО РЕФРЕШ
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
@@ -177,7 +211,13 @@ document.getElementById('fileInput').onchange = function(e) {
                 }
             });
         });
-        if(rawData.length > 0) { setupFilters(); renderList(); showTab('s', 'Дневни план', document.querySelectorAll('.nav-item')[1]); }
+        if(rawData.length > 0) { 
+            localStorage.setItem('raspored_data', JSON.stringify(rawData));
+            setupFilters(); 
+            autoSetSmena();
+            renderList(); 
+            showTab('s', 'Дневни план', document.querySelectorAll('.nav-item')[1]); 
+        }
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
