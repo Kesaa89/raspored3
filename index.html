@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.0 Alpha 1.2</title>
+    <title>Мој распоред v4.0 Alpha 1.3</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b57d0">
@@ -35,7 +35,7 @@
         .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; opacity: 0.6; cursor: pointer; }
         .nav-link.active { color: var(--primary); opacity: 1; }
         .hidden { display: none; }
-        select { width:100%; padding:15px; border-radius:15px; border:1px solid var(--outline); background:none; color:inherit; font-weight:700; font-size: 16px; }
+        select { width:100%; padding:15px; border-radius:15px; border:1px solid var(--outline); background:none; color:inherit; font-weight:700; font-size: 16px; appearance: none; }
     </style>
 </head>
 <body>
@@ -79,7 +79,6 @@
 
 <script>
 let rawData = [];
-// Ажурирана листа места према твом опису
 const MESTA = [
     "Портирница", "Низводна глава", "Мост", "Узводна глава", 
     "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", 
@@ -114,11 +113,12 @@ document.getElementById('fileInput').onchange = function(e) {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
                 
-                // Провера места са паметнијим поклапањем
                 MESTA.forEach(m => {
+                    // Паметна провера за свако место
                     if(rowText.includes(m.toUpperCase()) || 
-                       (m === "Пут Кладово Текија" && rowText.includes("ТЕКИЈА")) ||
-                       (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА"))) {
+                       (m === "Пут Кладово Текија" && (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО"))) ||
+                       (m === "Депонија Нови Сип" && rowText.includes("ДЕПОНИЈА")) ||
+                       (m === "Управна зграда" && rowText.includes("УПРАВН"))) {
                         currentMesto = m;
                     }
                 });
@@ -154,7 +154,6 @@ function setupFilters() {
         let d = new Date(year, month, i);
         let opt = document.createElement('option');
         opt.value = i;
-        // Формат: 18. Фебруар (Среда)
         opt.innerText = `${i}. ${MESECI[month]} (${DANI[d.getDay()]})`;
         sel.appendChild(opt);
     }
