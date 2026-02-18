@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.9.3</title>
+    <title>Мој распоред v4.9.4 - Date Fix</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
         <div id="dashboard-content"></div>
-        <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px;">
+        <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
             <p style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Ажурирај распоред</p>
             <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto;">
                 Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
@@ -121,7 +121,7 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.3 Pull-Dash</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.4 Date Fix</div>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444;">Обриши податке</button>
         </div>
     </div>
@@ -186,7 +186,6 @@ function renderDashboard() {
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
     let previewHtml = "";
-    // Измењено: Портирница, Патрола 1 и Патрола 2 уместо Моста
     ["Портирница", "Патрола 1", "Патрола 2"].forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
@@ -198,7 +197,6 @@ function renderDashboard() {
         <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>`;
 }
 
-// Увоз са фиксом за места
 document.getElementById('fileInput').onchange = function(e) {
     const reader = new FileReader();
     reader.onload = function(ex) {
@@ -297,19 +295,27 @@ function showTab(tabId, title, el) {
 }
 
 function generateText() {
-    const dan = parseInt(document.getElementById('danSel').value);
+    const danIdx = parseInt(document.getElementById('danSel').value);
     const smena = document.getElementById('smenaSel').value;
     const now = new Date();
-    let d1 = new Date(now.getFullYear(), now.getMonth(), dan);
-    let datumStr = (smena === "3") ? 
-        `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}./${String(new Date(now.getFullYear(), now.getMonth(), dan + 1).getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}.` :
-        `${String(d1.getDate()).padStart(2, '0')}.${String(d1.getMonth() + 1).padStart(2, '0')}.${d1.getFullYear()}.`;
+    
+    // Први дан (тренутно изабран у апликацији)
+    let d1 = new Date(now.getFullYear(), now.getMonth(), danIdx);
+    
+    const formatDate = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
+    
+    let datumStr = formatDate(d1);
+    if (smena === "3") {
+        // Други дан (аутоматски пребацује на 1. у месецу ако је d1 последњи дан фебруара)
+        let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
+        datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
+    }
     
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
-        const replaced = replacements[`${dan}-${smena}-${m}`];
+        const replaced = replacements[`${danIdx}-${smena}-${m}`];
         text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
     });
     return text;
@@ -319,7 +325,7 @@ async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
 function clearAppData() { if(confirm("Обрисати све?")) { localStorage.clear(); location.reload(); } }
 
-// PULL TO REFRESH LOGIC
+// PULL TO REFRESH
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
