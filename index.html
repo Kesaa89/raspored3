@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мој распоред v4.8.0 Alpha 6 (Strong Haptic)</title>
+    <title>Мој распоред v4.8.0 Alpha 6.1</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -90,7 +90,7 @@
             <div class="upload-icon-box">
                 <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
-            <label class="btn-action primary" style="display: inline-block; cursor: pointer; padding: 18px 36px; width: auto;">
+            <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 18px 36px; width: auto;">
                 Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
             </label>
         </div>
@@ -110,8 +110,8 @@
 
     <div id="tab-i" class="tab-pane hidden">
         <div class="card">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha6</div>
-            <div style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;">Појачан хаптик (вибрација).</div>
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.8.0-exp.alpha 6.1</div>
+            <div style="font-size: 13px; opacity: 0.7; margin-bottom: 15px;">Максимални хаптик одзив.</div>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444;">Обриши податке</button>
         </div>
     </div>
@@ -119,7 +119,7 @@
 
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
     <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 15px;">Замена службеника <span onclick="closeModal()" style="cursor:pointer">✕</span></div>
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 15px;">Замена службеника <span onclick="haptic(30); closeModal()" style="cursor:pointer; padding: 5px;">✕</span></div>
         <div id="workerList"></div>
     </div>
 </div>
@@ -137,7 +137,6 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 const DANI = ["Недеља", "Понедељак", "Уторак", "Среда", "Четвртак", "Петак", "Субота"];
 
-// STRONG HAPTIC
 function haptic(pattern = 30) {
     if (window.navigator && window.navigator.vibrate) {
         window.navigator.vibrate(pattern);
@@ -180,14 +179,14 @@ function showTab(tabId, title, el) {
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     if(el) { 
         el.classList.add('active'); 
-        haptic(45); // Јачи клик при промени таба
+        haptic(45);
         createRipple({currentTarget: el, clientX: el.getBoundingClientRect().left + 20, clientY: el.getBoundingClientRect().top + 20}); 
     }
     document.getElementById('page-title').innerText = title;
 }
 
 document.getElementById('fileInput').onchange = function(e) {
-    haptic([50, 30, 50]); // Троструки импулс за успех
+    haptic([60, 40, 60]);
     const reader = new FileReader();
     reader.onload = function(ex) {
         const data = new Uint8Array(ex.target.result);
@@ -278,7 +277,7 @@ function openSwap(mesto) {
     reset.className = "ripple";
     reset.style.padding = '18px'; reset.style.color = '#ef4444'; reset.style.fontWeight = '700'; reset.innerText = "✖ Поништи замену";
     reset.onclick = (e) => { 
-        haptic([60, 40, 60]); // Јак импулс за брисање
+        haptic([70, 40, 70]);
         createRipple(e);
         const dan = document.getElementById('danSel').value; 
         const smena = document.getElementById('smenaSel').value; 
@@ -289,7 +288,7 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 
-function closeModal() { haptic(20); document.getElementById('swapModal').style.display = 'none'; }
+function closeModal() { document.getElementById('swapModal').style.display = 'none'; }
 
 function generateText() {
     const dan = parseInt(document.getElementById('danSel').value);
@@ -314,18 +313,18 @@ function generateText() {
 }
 
 async function copyToClipboard(e) { 
-    haptic([60, 40, 60]); // Дупли јаки клик
+    haptic([70, 50, 70]); 
     createRipple(e); 
     await navigator.clipboard.writeText(generateText()); 
     document.getElementById('toast').style.opacity=1; 
     setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); 
 }
 async function shareList(e) { 
-    haptic([60, 40, 60]); 
+    haptic([70, 50, 70]); 
     createRipple(e); 
     if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); 
 }
-function clearAppData() { haptic([100, 50, 100]); if(confirm("Обрисати све?")) { localStorage.removeItem('raspored_data'); location.reload(); } }
+function clearAppData() { haptic([120, 60, 120]); if(confirm("Обрисати све?")) { localStorage.removeItem('raspored_data'); location.reload(); } }
 
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
@@ -335,7 +334,7 @@ scrollArea.ontouchmove = e => {
     let diff = e.touches[0].pageY - touchStart;
     if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
 };
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([50, 50]); location.reload(); } ptr.style.height = '0'; };
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
 </script>
 </body>
 </html>
