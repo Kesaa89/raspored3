@@ -3,19 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <meta name="theme-color" content="#004798">
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
     <title>Мој распоред v4.9.6</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* ТВОЈИ ОРИГИНАЛНИ СТИЛОВИ (БЕЗ ИЗМЕНА) */
         :root {
             --bg: #fdfbff;
             --surface-variant: #f0f2f9;
@@ -148,13 +141,6 @@
 </div>
 
 <script>
-// ТВОЈА ОРИГИНАЛНА СКРИПТА СА САМО ЈЕДНИМ ДОДАТКОМ НА ПОЧЕТКУ
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
-    });
-}
-
 let rawData = [];
 let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
@@ -298,7 +284,7 @@ function openSwap(mesto) {
 }
 
 function closeModal() { 
-    haptic(25);
+    haptic(25); // Суптилна вибрација на затварање
     document.getElementById('swapModal').style.display = 'none'; 
 }
 
@@ -348,4 +334,13 @@ function clearAppData() {
 // PULL TO REFRESH
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
-const ptr = 
+const ptr = document.getElementById('ptr-indicator');
+scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
+scrollArea.ontouchmove = e => {
+    let diff = e.touches[0].pageY - touchStart;
+    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
+};
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+</script>
+</body>
+</html>
