@@ -120,9 +120,9 @@
     </div>
 
     <div id="tab-i" class="tab-pane hidden">
-        <div class="card">
+        <div class="card" style="padding: 20px;">
             <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.4 Date Fix</div>
-            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444;">Обриши податке</button>
+            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши податке</button>
         </div>
     </div>
 </div>
@@ -298,19 +298,13 @@ function generateText() {
     const danIdx = parseInt(document.getElementById('danSel').value);
     const smena = document.getElementById('smenaSel').value;
     const now = new Date();
-    
-    // Први дан (тренутно изабран у апликацији)
     let d1 = new Date(now.getFullYear(), now.getMonth(), danIdx);
-    
     const formatDate = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
-    
     let datumStr = formatDate(d1);
     if (smena === "3") {
-        // Други дан (аутоматски пребацује на 1. у месецу ако је d1 последњи дан фебруара)
         let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
         datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
     }
-    
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
@@ -323,7 +317,15 @@ function generateText() {
 
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
-function clearAppData() { if(confirm("Обрисати све?")) { localStorage.clear(); location.reload(); } }
+
+// ОВАЈ ДЕО СМО САМО МАЛО УПРАВИЛИ
+function clearAppData() { 
+    haptic(100); 
+    if(confirm("Обрисати све?")) { 
+        localStorage.clear(); 
+        location.reload(); 
+    } 
+}
 
 // PULL TO REFRESH
 let touchStart = 0;
