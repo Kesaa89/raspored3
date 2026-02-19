@@ -54,6 +54,10 @@
         .welcome-card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
         .welcome-card p { margin: 0; opacity: 0.8; font-weight: 600; font-size: 14px; }
 
+        /* Стил за суптилну поруку */
+        .update-hint { font-size: 11px; font-weight: 800; color: var(--primary); text-align: center; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 0.8; transform: translateY(0); } }
+
         .live-preview { background: var(--surface-variant); border-radius: var(--card-radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .live-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .live-header span { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
@@ -145,6 +149,7 @@
 <script>
 let rawData = [];
 let replacements = {};
+let lastCheckTime = new Date(); // Памтимо време када је апликација покренута
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
@@ -180,6 +185,23 @@ function getCurrentSmena() {
     return "1";
 }
 
+// ПАМЕТНА ПРОВЕРА СМЕНЕ ПРИ ПОВРАТКУ
+document.addEventListener("visibilitychange", function() {
+    if (!document.hidden) {
+        const now = new Date();
+        const currentSmena = getCurrentSmena();
+        
+        // Ако се сати разликују од последње провере, или је прешло у нову смену
+        // само ћемо приказати суптилан текст, нећемо форсирати рендер.
+        const lastSmena = (h) => (h >= 15 && h < 23) ? "2" : (h >= 23 || h < 7) ? "3" : "1";
+        
+        if (lastSmena(lastCheckTime.getHours()) !== currentSmena || lastCheckTime.getDate() !== now.getDate()) {
+            const hint = document.getElementById('update-hint-text');
+            if (hint) hint.classList.remove('hidden');
+        }
+    }
+});
+
 function renderDashboard() {
     const now = new Date();
     const dan = now.getDate();
@@ -194,7 +216,9 @@ function renderDashboard() {
         previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
     });
 
+    // Овде додајемо суптилни контејнер за текст изнад картице
     document.getElementById('dashboard-content').innerHTML = `
+        <div id="update-hint-text" class="update-hint hidden">Смена је промењена. Повуците за ажурирање ↓</div>
         <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
         <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>`;
 }
@@ -314,35 +338,4 @@ function generateText() {
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
-        const replaced = replacements[`${danIdx}-${smena}-${m}`];
-        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
-    });
-    return text;
-}
-
-async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
-async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
-
-function clearAppData() { 
-    haptic(100); 
-    setTimeout(() => {
-        if(confirm("Обрисати све податке?")) { 
-            localStorage.clear(); 
-            location.reload(); 
-        }
-    }, 100);
-}
-
-// PULL TO REFRESH
-let touchStart = 0;
-const scrollArea = document.getElementById('scroll-area');
-const ptr = document.getElementById('ptr-indicator');
-scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
-scrollArea.ontouchmove = e => {
-    let diff = e.touches[0].pageY - touchStart;
-    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
-};
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
-</script>
-</body>
-</html>
+  
