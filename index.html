@@ -54,12 +54,10 @@
         .welcome-card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
         .welcome-card p { margin: 0; opacity: 0.8; font-weight: 600; font-size: 14px; }
 
-        .live-preview { background: var(--surface-variant); border-radius: var(--card-radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 8px; }
+        .live-preview { background: var(--surface-variant); border-radius: var(--card-radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .live-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .live-header span { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
         .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; }
-
-        .ptr-hint { text-align: center; font-size: 11px; font-weight: 700; color: var(--on-surface-variant); opacity: 0.5; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
         .mini-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .mini-row:last-child { border: none; }
@@ -99,10 +97,6 @@
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
         <div id="dashboard-content"></div>
-        <div class="ptr-hint">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 9l-7 7-7-7"/></svg>
-            Повуците наниже за освежавање
-        </div>
         <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
             <p style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Ажурирај распоред</p>
             <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto;">
@@ -185,14 +179,6 @@ function getCurrentSmena() {
     if (hour >= 23 || hour < 7) return "3";
     return "1";
 }
-
-// АУТОМАТСКО ОСВЕЖАВАЊЕ ПРИ БУЂЕЊУ ТЕЛЕФОНА
-document.addEventListener("visibilitychange", function() {
-    if (!document.hidden) {
-        renderDashboard();
-        if(!document.getElementById('tab-s').classList.contains('hidden')) renderList();
-    }
-});
 
 function renderDashboard() {
     const now = new Date();
@@ -283,35 +269,14 @@ function renderList() {
 function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
-    const dan = document.getElementById('danSel').value;
-    const smena = document.getElementById('smenaSel').value;
-    
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
     allWorkers.forEach(w => {
         const div = document.createElement('div');
         div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
         div.onclick = (e) => {
             haptic(40);
-            
-            // ИНТЕЛИГЕНТНА ПРОВЕРА ЗАМЕНЕ
-            let currentMestoOfNewWorker = null;
-            MESTA.forEach(m => {
-                const r = rawData.find(rad => rad.mesto === m && rad.raspored[dan-1] === smena);
-                const isRep = replacements[`${dan}-${smena}-${m}`];
-                if((isRep === w) || (!isRep && r && r.ime === w)) {
-                    currentMestoOfNewWorker = m;
-                }
-            });
-
-            if(currentMestoOfNewWorker && currentMestoOfNewWorker !== mesto) {
-                if(confirm(`${w} већ ради на позицији: ${currentMestoOfNewWorker}. Да ли желите двосмерну замену места?`)) {
-                    const originalRadnikNaMestu = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smena);
-                    if(originalRadnikNaMestu) {
-                        replacements[`${dan}-${smena}-${currentMestoOfNewWorker}`] = originalRadnikNaMestu.ime;
-                    }
-                }
-            }
-
+            const dan = document.getElementById('danSel').value;
+            const smena = document.getElementById('smenaSel').value;
             replacements[`${dan}-${smena}-${mesto}`] = w;
             closeModal(); renderList(); renderDashboard();
         };
@@ -345,4 +310,39 @@ function generateText() {
         let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
         datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
     }
-    let 
+    let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
+    MESTA.forEach(m => {
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
+        const replaced = replacements[`${danIdx}-${smena}-${m}`];
+        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
+    });
+    return text;
+}
+
+async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
+async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+
+function clearAppData() { 
+    haptic(100); 
+    setTimeout(() => {
+        if(confirm("Обрисати све податке?")) { 
+            localStorage.clear(); 
+            location.reload(); 
+        }
+    }, 100);
+}
+
+// PULL TO REFRESH
+let touchStart = 0;
+const scrollArea = document.getElementById('scroll-area');
+const ptr = document.getElementById('ptr-indicator');
+scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
+scrollArea.ontouchmove = e => {
+    let diff = e.touches[0].pageY - touchStart;
+    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
+};
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+</script>
+</body>
+</html>
