@@ -45,6 +45,12 @@
         @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
         #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--on-surface-variant); font-size: 13px; font-weight: 700; transition: height 0.2s; }
+        
+        /* PAMETNA PORUKA STIL */
+        #smart-hint { position: fixed; top: 110px; left: 0; right: 0; text-align: center; display: none; z-index: 99; animation: slideDown 0.4s ease; }
+        .hint-pill { background: var(--primary); color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .app-bar { padding: 55px 24px 10px; background: transparent; flex-shrink: 0; }
         .app-bar h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
         
@@ -92,6 +98,7 @@
 
 <div id="toast">Копирано</div>
 <div id="ptr-indicator">Освежавам...</div>
+<div id="smart-hint"><span class="hint-pill">Смена је промењена. Повуците за освежавање</span></div>
 <div class="app-bar"><h1 id="page-title">Преглед</h1></div>
 
 <div class="main-content" id="scroll-area">
@@ -161,6 +168,16 @@ function createRipple(event) {
     button.appendChild(circle);
     setTimeout(() => circle.remove(), 600);
 }
+
+// PAMETNA PROVERA SMENE
+let lastCheckedSmena = getCurrentSmena();
+function checkSmenaChange() {
+    const current = getCurrentSmena();
+    if (current !== lastCheckedSmena) {
+        document.getElementById('smart-hint').style.display = 'block';
+    }
+}
+setInterval(checkSmenaChange, 30000);
 
 function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
