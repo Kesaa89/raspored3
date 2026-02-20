@@ -171,28 +171,15 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
 const cyrToLatMap = {'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Ђ':'Đ','Е':'E','Ж':'Ž','З':'Z','И':'I','Ј':'J','К':'K','Л':'L','Љ':'Lj','М':'M','Н':'N','Њ':'Nj','О':'O','П':'P','Р':'R','С':'S','Т':'T','Ћ':'Ć','У':'U','Ф':'F','Х':'H','Ц':'C','Ч':'Č','Џ':'Dž','Ш':'Š','а':'a','б':'b','в':'v','г':'g','д':'d','ђ':'đ','е':'e','ж':'ž','з':'z','и':'i','ј':'j','к':'k','л':'l','љ':'lj','м':'m','н':'n','њ':'nj','о':'o','п':'p','р':'r','с':'s','т':'t','ћ':'ć','у':'u','ф':'f','х':'h','ц':'c','ч':'č','џ':'dž','ш':'š'};
-const latToCyrMap = Object.fromEntries(Object.entries(cyrToLatMap).map(([k, v]) => [v, k]));
 
 function t(text) {
     if (!text || currentScript === 'cyr') return text;
     let res = text;
-    // Специјални случајеви за Љ, Њ, Џ
     res = res.replace(/Љ/g, 'Lj').replace(/Њ/g, 'Nj').replace(/Џ/g, 'Dž').replace(/љ/g, 'lj').replace(/њ/g, 'nj').replace(/џ/g, 'dž');
     return res.split('').map(char => cyrToLatMap[char] || char).join('');
 }
 
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
-function createRipple(event) {
-    const button = event.currentTarget;
-    const circle = document.createElement("span");
-    const diameter = Math.max(button.clientWidth, button.clientHeight);
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - diameter/2}px`;
-    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - diameter/2}px`;
-    circle.classList.add("ripple-effect");
-    button.appendChild(circle);
-    setTimeout(() => circle.remove(), 600);
-}
 
 function setScript(script) {
     currentScript = script;
@@ -201,14 +188,53 @@ function setScript(script) {
     updateScriptButtons();
     renderDashboard();
     renderList();
-    document.getElementById('page-title').innerText = t(document.getElementById('page-title').innerText);
+    
+    // Превод наслова стране
+    const titles = { 'u': 'Преглед', 's': 'План', 'i': 'Инфо' };
+    const activeTab = document.querySelector('.nav-item.active').onclick.toString().match(/'([^']+)'/)[1];
+    document.getElementById('page-title').innerText = t(titles[activeTab] || 'Преглед');
+
+    // Превод у Инфо табу
+    const infoTab = document.getElementById('tab-i');
+    const versionDiv = Array.from(infoTab.querySelectorAll('div')).find(d => d.innerText.includes('v4.9.6'));
+    if(versionDiv) versionDiv.innerText = t('v4.9.6 Стабилна');
+    
+    const labelP = infoTab.querySelector('p[style*="font-size: 11px"]');
+    if(labelP) labelP.innerText = t('Избор писма');
+    
+    // Превод селектора смена
+    const smenaSel = document.getElementById('smenaSel');
+    if(smenaSel) {
+        smenaSel.options[0].text = t('Прва смена');
+        smenaSel.options[1].text = t('Друга смена');
+        smenaSel.options[2].text = t('Трећа смена');
+    }
+    
+    // Превод прозора за замену
+    const modalHeader = document.querySelector('#swapModal div[style*="font-size: 20px"]');
+    if(modalHeader) modalHeader.innerHTML = t('Замена') + ' <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span>';
+    const sBox = document.getElementById('searchBox');
+    if(sBox) sBox.placeholder = t('Претражи по имену...');
+    
+    // Превод секције за учитавање
+    const uploadSec = document.getElementById('upload-section');
+    if(uploadSec) {
+        const pText = uploadSec.querySelector('p');
+        if(pText) pText.innerText = t('Ажурирај распоред');
+        const lBtn = uploadSec.querySelector('label');
+        if(lBtn) lBtn.childNodes[0].textContent = t('Изабери фајл ');
+    }
 }
 
 function updateScriptButtons() {
-    document.getElementById('btnCyrl').style.background = currentScript === 'cyr' ? 'var(--primary)' : 'var(--surface-variant)';
-    document.getElementById('btnCyrl').style.color = currentScript === 'cyr' ? 'white' : 'var(--on-surface)';
-    document.getElementById('btnLat').style.background = currentScript === 'lat' ? 'var(--primary)' : 'var(--surface-variant)';
-    document.getElementById('btnLat').style.color = currentScript === 'lat' ? 'white' : 'var(--on-surface)';
+    const bC = document.getElementById('btnCyrl');
+    const bL = document.getElementById('btnLat');
+    if(bC && bL) {
+        bC.style.background = currentScript === 'cyr' ? 'var(--primary)' : 'var(--surface-variant)';
+        bC.style.color = currentScript === 'cyr' ? 'white' : 'var(--on-surface)';
+        bL.style.background = currentScript === 'lat' ? 'var(--primary)' : 'var(--surface-variant)';
+        bL.style.color = currentScript === 'lat' ? 'white' : 'var(--on-surface)';
+    }
 }
 
 let lastCheckedSmena = getCurrentSmena();
@@ -216,6 +242,7 @@ function checkSmenaChange() {
     const current = getCurrentSmena();
     if (current !== lastCheckedSmena) {
         document.getElementById('smart-hint').style.display = 'block';
+        document.querySelector('.hint-pill').innerText = t('Смена је промењена. Освежите');
     }
 }
 setInterval(checkSmenaChange, 30000);
@@ -233,7 +260,7 @@ function checkStorage() {
         document.getElementById('upload-section').classList.remove('hidden');
         document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>${t('Добродошли')}</h2><p>${t('Учитајте распоред да бисте почели.')}</p></div>`;
     }
-    updateScriptButtons();
+    setScript(currentScript);
 }
 
 function getCurrentSmena() {
@@ -318,7 +345,8 @@ document.getElementById('fileInput').onchange = function(e) {
 };
 
 function setupFilters() {
-    const sel = document.getElementById('danSel'); sel.innerHTML = "";
+    const sel = document.getElementById('danSel'); if(!sel) return;
+    sel.innerHTML = "";
     const now = new Date();
     const maxDays = Math.max(...rawData.map(r => r.raspored.length));
     for(let i=1; i<=maxDays; i++) {
@@ -334,6 +362,7 @@ function renderList() {
     const dan = document.getElementById('danSel').value;
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
+    if(!container) return;
     container.innerHTML = "";
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
@@ -353,20 +382,19 @@ function renderList() {
         container.appendChild(row);
     });
     document.getElementById('action-buttons').style.display = 'grid';
-    // Промена текста дугмади
-    document.querySelector('.actions .btn-action:not(.primary)').innerText = t('Копирај');
-    document.querySelector('.actions .primary').innerText = t('Подели');
+    const copyBtn = document.querySelector('#tab-s .btn-action:not(.primary)');
+    const shareBtn = document.querySelector('#tab-s .btn-action.primary');
+    if(copyBtn) copyBtn.innerText = t('Копирај');
+    if(shareBtn) shareBtn.innerText = t('Подели');
 }
 
 function openSwap(mesto) {
     document.getElementById('searchBox').value = "";
-    const dan = document.getElementById('danSel').value;
-    const smenaTrenutna = document.getElementById('smenaSel').value;
-    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
     window.currentMestoForSwap = mesto;
+    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
     renderWorkerList(allWorkers);
     document.getElementById('swapModal').style.display = 'flex';
-    setTimeout(() => document.getElementById('searchBox').focus(), 100);
+    setTimeout(() => document.getElementById('searchBox').focus(), 150);
 }
 
 function filterWorkers() {
@@ -426,6 +454,7 @@ function showTab(tabId, title, el) {
     document.getElementById('page-title').innerText = t(title);
     if(tabId === 's') { setupFilters(); renderList(); }
     if(tabId === 'u') { renderDashboard(); }
+    setScript(currentScript);
 }
 
 function generateText() {
@@ -439,7 +468,8 @@ function generateText() {
         let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
         datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
     }
-    let text = `${t('ЂЕРДАП 1 КЛАДОВО')}\n${datumStr}\n${t(document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text)}\n\n`;
+    const smenaText = document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text;
+    let text = `${t('ЂЕРДАП 1 КЛАДОВО')}\n${datumStr}\n${t(smenaText)}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
@@ -449,8 +479,8 @@ function generateText() {
     return text;
 }
 
-async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').innerText = t('Копирано'); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
-async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+async function copyToClipboard(e) { haptic([70, 50, 70]); await navigator.clipboard.writeText(generateText()); const toast = document.getElementById('toast'); toast.innerText = t('Копирано'); toast.style.opacity=1; setTimeout(()=>toast.style.opacity=0,2000); }
+async function shareList(e) { haptic([70, 50, 70]); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
 
 function clearReplacements() {
     haptic(100); 
@@ -469,15 +499,17 @@ function clearAppData() { haptic(100); setTimeout(() => { if(confirm(t("Обри
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
-scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
-scrollArea.ontouchmove = e => {
-    let diff = e.touches[0].pageY - touchStart;
-    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) {
-        ptr.style.height = diff + 'px';
-        ptr.innerText = t('Освежавам...');
-    }
-};
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+if(scrollArea) {
+    scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
+    scrollArea.ontouchmove = e => {
+        let diff = e.touches[0].pageY - touchStart;
+        if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) {
+            ptr.style.height = diff + 'px';
+            ptr.innerText = t('Освежавам...');
+        }
+    };
+    scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+}
 </script>
 </body>
 </html>
