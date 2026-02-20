@@ -205,7 +205,6 @@ function renderDashboard() {
     const smena = getCurrentSmena();
     const hour = now.getHours();
     
-    // INTELIGENTNI POZDRAVI
     let greeting = "Добар дан";
     if (hour >= 5 && hour < 10) greeting = "Добро јутро";
     else if (hour >= 18 && hour < 22) greeting = "Добро вече";
@@ -220,21 +219,27 @@ function renderDashboard() {
         previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
     });
 
-    // PANEL ZA AKTIVNE ZAMENE
     let zameneHtml = "";
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${dan}-${smena}-${m}`];
         if (replaced) {
-            zameneHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${replaced} <small style="opacity:0.6">ум.</small> ${originalIme}</span></div>`;
+            zameneHtml += `
+                <div class="mini-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                    <span class="mini-mesto" style="white-space: nowrap;">${m}</span>
+                    <span class="mini-ime" style="text-align: right; font-size: 13px; line-height: 1.2;">
+                        ${replaced}<br>
+                        <small style="opacity:0.6; font-size: 10px; font-weight: 500;">уместо ${originalIme}</small>
+                    </span>
+                </div>`;
         }
     });
 
     document.getElementById('dashboard-content').innerHTML = `
         <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
         <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
-        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border-color: var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
+        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border: 1px solid var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
     `;
 }
 
