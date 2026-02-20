@@ -156,7 +156,6 @@ const MESTA = ["Портирница", "Низводна глава", "Мост"
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
-
 function createRipple(event) {
     const button = event.currentTarget;
     const circle = document.createElement("span");
@@ -324,13 +323,13 @@ function openSwap(mesto) {
         div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
+            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
                 if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === m && rd.raspored[dan-1] === s);
+                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
                 const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
