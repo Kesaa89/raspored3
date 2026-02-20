@@ -89,6 +89,16 @@
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: var(--bg); }
 
+        /* Стилови за модал и поље за претрагу */
+        #swapModal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 3000; animation: fadeIn 0.2s; }
+        .modal-content { background: var(--bg); width: 100%; border-radius: 32px 32px 0 0; max-height: 85vh; display: flex; flex-direction: column; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #searchBox { width: 100%; padding: 16px 20px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface-variant); color: var(--on-surface); font-size: 16px; font-weight: 700; margin-bottom: 15px; outline: none; }
+        #searchBox:focus { border-color: var(--primary); }
+        #workerList { overflow-y: auto; flex: 1; padding-bottom: 40px; }
+
+        @keyframes fadeIn { from { opacity: 0; } }
+        @keyframes slideUp { from { transform: translateY(100%); } }
+
         #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 14px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 2000; }
         .hidden { display: none; }
     </style>
@@ -136,10 +146,15 @@
     </div>
 </div>
 
-<div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
-    <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span></div>
-        <div id="workerList"></div>
+<div id="swapModal">
+    <div class="modal-content">
+        <div style="padding: 24px 24px 10px;">
+            <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+                Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span>
+            </div>
+            <input type="text" id="searchBox" placeholder="Претражи по имену..." oninput="filterWorkers()">
+        </div>
+        <div id="workerList" style="padding: 0 24px 40px;"></div>
     </div>
 </div>
 
@@ -148,6 +163,7 @@
     <div class="nav-item ripple" onclick="showTab('s', 'План', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
     <div class="nav-item ripple" onclick="showTab('i', 'Инфо', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
 </div>
+
 <script>
 let rawData = [];
 let replacements = {};
@@ -203,12 +219,7 @@ function renderDashboard() {
     const dan = now.getDate();
     const smena = getCurrentSmena();
     const hour = now.getHours();
-    
-    let greeting = "Добар дан";
-    if (hour >= 5 && hour < 10) greeting = "Добро јутро";
-    else if (hour >= 18 && hour < 22) greeting = "Добро вече";
-    else if (hour >= 22 || hour < 5) greeting = "Радна ноћ – Срећан рад";
-
+    let greeting = hour >= 5 && hour < 10 ? "Добро јутро" : hour >= 18 && hour < 22 ? "Добро вече" : hour >= 22 || hour < 5 ? "Радна ноћ – Срећан рад" : "Добар дан";
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
     let previewHtml = "";
@@ -224,14 +235,7 @@ function renderDashboard() {
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${dan}-${smena}-${m}`];
         if (replaced) {
-            zameneHtml += `
-                <div class="mini-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <span class="mini-mesto" style="white-space: nowrap;">${m}</span>
-                    <span class="mini-ime" style="text-align: right; font-size: 13px; line-height: 1.2;">
-                        ${replaced}<br>
-                        <small style="opacity:0.6; font-size: 10px; font-weight: 500;">уместо ${originalIme}</small>
-                    </span>
-                </div>`;
+            zameneHtml += `<div class="mini-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;"><span class="mini-mesto" style="white-space: nowrap;">${m}</span><span class="mini-ime" style="text-align: right; font-size: 13px; line-height: 1.2;">${replaced}<br><small style="opacity:0.6; font-size: 10px; font-weight: 500;">уместо ${originalIme}</small></span></div>`;
         }
     });
 
@@ -266,14 +270,14 @@ document.getElementById('fileInput').onchange = function(e) {
             });
         });
         localStorage.setItem('raspored_data', JSON.stringify(rawData));
-        document.getElementById('upload-section').classList.add('hidden');
-        setupFilters(); renderDashboard(); haptic([60, 40, 60]);
+        location.reload();
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
 
 function setupFilters() {
-    const sel = document.getElementById('danSel'); sel.innerHTML = "";
+    const sel = document.getElementById('danSel'); if(!sel) return;
+    sel.innerHTML = "";
     const now = new Date();
     const maxDays = Math.max(...rawData.map(r => r.raspored.length));
     for(let i=1; i<=maxDays; i++) {
@@ -295,60 +299,59 @@ function renderList() {
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
-        
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
         row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
-        row.innerHTML = `<div class="mesto-info">
-                <span class="mesto-name">${m}</span>
-                <span class="worker-name">${displayName}</span>
-                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
-            </div>
-            <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
+        row.innerHTML = `<div class="mesto-info"><span class="mesto-name">${m}</span><span class="worker-name">${displayName}</span>${originalIme !== "—" ? `<span class="swap-hint">Замени</span>` : ''}</div><div style="opacity:0.3">❯</div>`;
         container.appendChild(row);
     });
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
 function openSwap(mesto) {
+    window.currentMestoForSwap = mesto;
+    document.getElementById('searchBox').value = "";
+    filterWorkers();
+    document.getElementById('swapModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('searchBox').focus(), 150);
+}
+
+function filterWorkers() {
+    const term = document.getElementById('searchBox').value.toLowerCase();
+    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
+    const filtered = allWorkers.filter(w => w.toLowerCase().includes(term));
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
     const dan = document.getElementById('danSel').value;
     const smenaTrenutna = document.getElementById('smenaSel').value;
-    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
-    allWorkers.forEach(w => {
+    filtered.forEach(w => {
         const div = document.createElement('div');
         div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
-        div.onclick = (e) => {
+        div.onclick = () => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            const radnikIzBaze = rawData.find(r => r.mesto === window.currentMestoForSwap && r.raspored[dan-1] === smenaTrenutna);
+            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${window.currentMestoForSwap}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
                 if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
-                const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
+                const rS = rawData.find(rd => rd.mesto === window.currentMestoForSwap && rd.raspored[dan-1] === s);
+                const imeUSmeni = replacements[`${dan}-${s}-${window.currentMestoForSwap}`] || (rS ? rS.ime : "—");
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
 
-            if (rotiranaSmena) {
-                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
-                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                } else {
-                    closeModal(); return; 
-                }
+            if (rotiranaSmena && confirm(`${w} ради овде у ${rotiranaSmena}. смени. Ротација са ${trenutniIme}?`)) {
+                replacements[`${dan}-${rotiranaSmena}-${window.currentMestoForSwap}`] = trenutniIme;
+                replacements[`${dan}-${smenaTrenutna}-${window.currentMestoForSwap}`] = w;
             } else {
-                replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
+                replacements[`${dan}-${smenaTrenutna}-${window.currentMestoForSwap}`] = w;
             }
             localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
     });
-    document.getElementById('swapModal').style.display = 'flex';
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
@@ -359,8 +362,8 @@ function showTab(tabId, title, el) {
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     if(el) { el.classList.add('active'); haptic(45); }
     document.getElementById('page-title').innerText = title;
-    if(tabId === 's') { setupFilters(); renderList(); }
-    if(tabId === 'u') { renderDashboard(); }
+    if(tabId === 's') renderList();
+    if(tabId === 'u') renderDashboard();
 }
 
 function generateText() {
@@ -368,38 +371,21 @@ function generateText() {
     const smena = document.getElementById('smenaSel').value;
     const now = new Date();
     let d1 = new Date(now.getFullYear(), now.getMonth(), danIdx);
-    const formatDate = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
-    let datumStr = formatDate(d1);
-    if (smena === "3") {
-        let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
-        datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
-    }
+    const formatDate = d => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
+    let datumStr = smena === "3" ? `${formatDate(d1)}/${formatDate(new Date(now.getFullYear(), now.getMonth(), danIdx + 1))}` : formatDate(d1);
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
-        const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
-        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
+        text += `${m}: ${replaced ? replaced + ' уместо ' + (radnik?radnik.ime:'—') : (radnik?radnik.ime:'—')}\n`;
     });
     return text;
 }
 
-async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
-async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
-
-function clearReplacements() {
-    haptic(100); 
-    setTimeout(() => {
-        if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
-            replacements = {};
-            localStorage.removeItem('rucne_zamene');
-            renderDashboard();
-            renderList();
-        }
-    }, 100);
-}
-
-function clearAppData() { haptic(100); setTimeout(() => { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }, 100); }
+async function copyToClipboard(e) { haptic([70, 50, 70]); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
+async function shareList(e) { haptic([70, 50, 70]); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+function clearReplacements() { haptic(100); if(confirm("Поништити замене?")) { replacements = {}; localStorage.removeItem('rucne_zamene'); renderDashboard(); renderList(); } }
+function clearAppData() { haptic(100); if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }
 
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
