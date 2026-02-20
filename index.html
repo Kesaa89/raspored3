@@ -128,9 +128,10 @@
     </div>
 
     <div id="tab-i" class="tab-pane hidden">
-        <div class="card" style="padding: 20px;">
-            <div style="font-weight: 800; font-size: 18px; margin-bottom: 10px;">v4.9.6 Стабилна</div>
-            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши податке</button>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-weight: 800; font-size: 18px; margin-bottom: 5px;">v4.9.6 Стабилна</div>
+            <button onclick="clearReplacements()" class="btn-action" style="width:100%; color:#f59e0b; border-color:#f59e0b; cursor: pointer;">Поништи све замене</button>
+            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши све податке</button>
         </div>
     </div>
 </div>
@@ -323,13 +324,13 @@ function openSwap(mesto) {
         div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
+            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
                 if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
+                const rS = rawData.find(rd => rd.mesto === m && rd.raspored[dan-1] === s);
                 const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
@@ -387,6 +388,18 @@ function generateText() {
 
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+
+function clearReplacements() {
+    haptic(100); 
+    setTimeout(() => {
+        if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
+            replacements = {};
+            localStorage.removeItem('rucne_zamene');
+            renderDashboard();
+            renderList();
+        }
+    }, 100);
+}
 
 function clearAppData() { haptic(100); setTimeout(() => { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }, 100); }
 
