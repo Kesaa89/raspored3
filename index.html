@@ -46,7 +46,6 @@
 
         #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--on-surface-variant); font-size: 13px; font-weight: 700; transition: height 0.2s; }
         
-        /* PAMETNA PORUKA STIL */
         #smart-hint { position: fixed; top: 110px; left: 0; right: 0; text-align: center; display: none; z-index: 99; animation: slideDown 0.4s ease; }
         .hint-pill { background: var(--primary); color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -95,7 +94,6 @@
     </style>
 </head>
 <body onload="checkStorage()">
-
 <div id="toast">Копирано</div>
 <div id="ptr-indicator">Освежавам...</div>
 <div id="smart-hint"><span class="hint-pill">Смена је промењена. Повуците за освежавање</span></div>
@@ -169,7 +167,6 @@ function createRipple(event) {
     setTimeout(() => circle.remove(), 600);
 }
 
-// PAMETNA PROVERA SMENE
 let lastCheckedSmena = getCurrentSmena();
 function checkSmenaChange() {
     const current = getCurrentSmena();
@@ -181,6 +178,8 @@ setInterval(checkSmenaChange, 30000);
 
 function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
+    const savedReplacements = localStorage.getItem('rucne_zamene');
+    if (savedReplacements) replacements = JSON.parse(savedReplacements);
     if (saved) {
         rawData = JSON.parse(saved);
         setupFilters();
@@ -286,15 +285,31 @@ function renderList() {
 function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
+    const dan = document.getElementById('danSel').value;
+    const smena = document.getElementById('smenaSel').value;
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
+
     allWorkers.forEach(w => {
         const div = document.createElement('div');
         div.className = "ripple"; div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)'; div.style.fontWeight = '600'; div.innerText = w;
         div.onclick = (e) => {
             haptic(40);
-            const dan = document.getElementById('danSel').value;
-            const smena = document.getElementById('smenaSel').value;
+            const radnikNaMestu = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smena);
+            const trenutniIme = replacements[`${dan}-${smena}-${mesto}`] || (radnikNaMestu ? radnikNaMestu.ime : "—");
+
+            let staroMesto = "";
+            MESTA.forEach(m => {
+                const r = rawData.find(rd => rd.mesto === m && rd.raspored[dan-1] === smena);
+                const ime = replacements[`${dan}-${smena}-${m}`] || (r ? r.ime : "—");
+                if(ime === w) staroMesto = m;
+            });
+
+            if (staroMesto && staroMesto !== mesto && confirm(`${w} је већ на позицији ${staroMesto}.\nИзвршити ротацију са ${trenutniIme}?`)) {
+                replacements[`${dan}-${smena}-${staroMesto}`] = trenutniIme;
+            }
+            
             replacements[`${dan}-${smena}-${mesto}`] = w;
+            localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
@@ -302,11 +317,7 @@ function openSwap(mesto) {
     document.getElementById('swapModal').style.display = 'flex';
 }
 
-function closeModal() { 
-    haptic(25);
-    document.getElementById('swapModal').style.display = 'none'; 
-}
-
+function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -339,18 +350,8 @@ function generateText() {
 
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
+function clearAppData() { haptic(100); setTimeout(() => { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }, 100); }
 
-function clearAppData() { 
-    haptic(100); 
-    setTimeout(() => {
-        if(confirm("Обрисати све податке?")) { 
-            localStorage.clear(); 
-            location.reload(); 
-        }
-    }, 100);
-}
-
-// PULL TO REFRESH
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
