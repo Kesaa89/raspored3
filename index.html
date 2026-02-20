@@ -103,7 +103,7 @@
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
         <div id="dashboard-content"></div>
-        <div class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
+        <div id="upload-section" class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
             <p style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Ажурирај распоред</p>
             <label class="btn-action primary ripple" onclick="haptic(60); createRipple(event)" style="display: inline-block; cursor: pointer; padding: 14px 28px; width: auto;">
                 Изабери фајл <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
@@ -168,7 +168,6 @@ function createRipple(event) {
     setTimeout(() => circle.remove(), 600);
 }
 
-// PAMETNA PROVERA SMENE (07, 15, 23h)
 let lastCheckedSmena = getCurrentSmena();
 function checkSmenaChange() {
     const current = getCurrentSmena();
@@ -184,9 +183,11 @@ function checkStorage() {
     if (savedReplacements) replacements = JSON.parse(savedReplacements);
     if (saved) {
         rawData = JSON.parse(saved);
+        document.getElementById('upload-section').classList.add('hidden');
         setupFilters();
         renderDashboard();
     } else {
+        document.getElementById('upload-section').classList.remove('hidden');
         document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>Добродошли</h2><p>Учитајте распоред да бисте почели.</p></div>`;
     }
 }
@@ -202,7 +203,14 @@ function renderDashboard() {
     const now = new Date();
     const dan = now.getDate();
     const smena = getCurrentSmena();
-    const greeting = now.getHours() < 12 ? "Добро јутро" : (now.getHours() < 18 ? "Добар дан" : "Добро вече");
+    const hour = now.getHours();
+    
+    // INTELIGENTNI POZDRAVI
+    let greeting = "Добар дан";
+    if (hour >= 5 && hour < 10) greeting = "Добро јутро";
+    else if (hour >= 18 && hour < 22) greeting = "Добро вече";
+    else if (hour >= 22 || hour < 5) greeting = "Радна ноћ – Срећан рад";
+
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
     let previewHtml = "";
@@ -212,9 +220,22 @@ function renderDashboard() {
         previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
     });
 
+    // PANEL ZA AKTIVNE ZAMENE
+    let zameneHtml = "";
+    MESTA.forEach(m => {
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
+        const replaced = replacements[`${dan}-${smena}-${m}`];
+        if (replaced) {
+            zameneHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${replaced} <small style="opacity:0.6">ум.</small> ${originalIme}</span></div>`;
+        }
+    });
+
     document.getElementById('dashboard-content').innerHTML = `
         <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
-        <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>`;
+        <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
+        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border-color: var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
+    `;
 }
 
 document.getElementById('fileInput').onchange = function(e) {
@@ -241,6 +262,7 @@ document.getElementById('fileInput').onchange = function(e) {
             });
         });
         localStorage.setItem('raspored_data', JSON.stringify(rawData));
+        document.getElementById('upload-section').classList.add('hidden');
         setupFilters(); renderDashboard(); haptic([60, 40, 60]);
     };
     reader.readAsArrayBuffer(e.target.files[0]);
@@ -334,6 +356,7 @@ function showTab(tabId, title, el) {
     if(el) { el.classList.add('active'); haptic(45); }
     document.getElementById('page-title').innerText = title;
     if(tabId === 's') { setupFilters(); renderList(); }
+    if(tabId === 'u') { renderDashboard(); }
 }
 
 function generateText() {
