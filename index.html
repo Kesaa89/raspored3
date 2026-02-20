@@ -85,10 +85,6 @@
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* СТИЛОВИ ЗА ПРЕТРАГУ И МОДАЛ */
-        #workerSearch { position: sticky; top: 0; z-index: 10; width: 100%; padding: 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--on-surface); font-size: 16px; font-weight: 700; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); outline: none; }
-        #workerList { padding-bottom: 250px; } /* Простор због тастатуре */
-
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: var(--bg); }
@@ -143,7 +139,6 @@
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
     <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
         <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span></div>
-        <input type="text" id="workerSearch" placeholder="Претражи колегу..." oninput="filterWorkerList()">
         <div id="workerList"></div>
     </div>
 </div>
@@ -315,31 +310,9 @@ function renderList() {
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
-// Функција за филтрирање листе колега
-function filterWorkerList() {
-    const input = document.getElementById('workerSearch');
-    const filter = input.value.toLowerCase();
-    const list = document.getElementById('workerList');
-    const items = list.getElementsByTagName('div');
-
-    for (let i = 0; i < items.length; i++) {
-        const txtValue = items[i].textContent || items[i].innerText;
-        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-            items[i].style.display = "";
-        } else {
-            items[i].style.display = "none";
-        }
-    }
-}
-
 function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
-    
-    // Ресетујемо претрагу при сваком отварању
-    const searchInput = document.getElementById('workerSearch');
-    if(searchInput) searchInput.value = "";
-
     const dan = document.getElementById('danSel').value;
     const smenaTrenutna = document.getElementById('smenaSel').value;
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
