@@ -400,9 +400,9 @@ function openSwap(mesto) {
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
-        // Провера за умор (ако је радио јуче 3. смену)
+        // ПАМЕТНА ПРОВЕРА ЗА УМОР: Боји у наранџасто само ако је радио 3. смену јуче, а сада гледамо 1. смену
         let isTired = false;
-        if(dan > 1) {
+        if(dan > 1 && smenaTrenutna === "1") {
             const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
             if(radioJuče) isTired = true;
         }
@@ -412,7 +412,7 @@ function openSwap(mesto) {
         div.style.padding = '18px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
         div.style.fontWeight = '600';
-        div.style.color = isTired ? '#f39c12' : 'inherit'; // Суптилно наранџаста за умор
+        div.style.color = isTired ? '#f39c12' : 'inherit'; 
         div.innerText = w;
         
         div.onclick = (e) => {
@@ -420,19 +420,15 @@ function openSwap(mesto) {
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
             const тренутниИме = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
-            // Логика за Портирницу (Замена или Додавање)
             if(mesto === "Портирница" && тренутниИме !== "—" && тренутниИме !== w) {
                 if(confirm(`Да ли колега ${w} МЕЊА постојећег радника?\n\n(ОК = Замена, Cancel = Додај као појачање)`)) {
-                    // Стандардна замена
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
                 } else {
-                    // Додавање колеге (Појачање) - само ако већ није на листи
                     if(!тренутниИме.includes(w)) {
                         replacements[`${dan}-${smenaTrenutna}-${mesto}`] = тренутниИме + ", " + w;
                     }
                 }
             } else {
-                // Стандардна ротација за остала места
                 let rotiranaSmena = "";
                 ["1", "2", "3"].forEach(s => {
                     if(s === smenaTrenutna) return;
@@ -488,9 +484,7 @@ function generateText() {
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
         
-        // Паметан текст за Вибер
         if(m === "Портирница" && replaced && replaced.includes(",")) {
-            // Ако је дописно више људи (појачање), не пишемо "уместо"
             text += `${m}: ${replaced}\n`;
         } else {
             text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
