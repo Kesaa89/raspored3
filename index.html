@@ -177,7 +177,7 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- НОВЕ ФУНКЦИЈЕ ---
+// --- ФУНКЦИЈЕ ЗА ХАПТИК И ПУЛСИРАЈУЋЕ ДУГМЕ ---
 
 function haptic(pattern = 30) { 
     if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); 
@@ -210,7 +210,9 @@ function updateOneTapVisibility() {
             btn.id = 'viber-one-tap';
             btn.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M17.5 12c0 3.037-2.463 5.5-5.5 5.5S6.5 15.037 6.5 12s2.463-5.5 5.5-5.5 5.5 2.463 5.5 5.5zm-5.5 7.5c4.142 0 7.5-3.358 7.5-7.5s-3.358-7.5-7.5-7.5-7.5 3.358-7.5 7.5 3.358 7.5 7.5 7.5zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>`;
             Object.assign(btn.style, {
-                position: 'fixed', bottom: '85px', right: '20px',
+                position: 'fixed', 
+                bottom: '110px', // Подигнуто са 85px на 110px да не прекрива навигацију
+                right: '20px',
                 width: '60px', height: '60px', borderRadius: '50%',
                 backgroundColor: '#7360f2', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', boxShadow: '0 4px 15px rgba(115,96,242,0.4)',
@@ -237,7 +239,7 @@ function updateOneTapVisibility() {
 
 setInterval(updateOneTapVisibility, 60000);
 
-// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
+// --- ОСНОВНА ЛОГИКА ---
 
 function createRipple(event) {
     const button = event.currentTarget;
@@ -383,41 +385,21 @@ function renderList() {
         
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
-        
-        let plusBtn = "";
-        if(m === "Портирница") {
-            plusBtn = `<div class="plus-add-btn" onclick="event.stopPropagation(); haptic(40); openSwap('Портирница', true);"><span>+</span></div>`;
-        }
 
-        row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
+        row.onclick = (e) => { 
+            haptic(30); 
+            createRipple(e); 
+            // За Портирницу омогућавамо додавање ако се кликне (без посебног + дугмета)
+            openSwap(m, m === "Портирница"); 
+        };
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
-                ${originalIme !== "—" && m !== "Портирница" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
+                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
             </div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                ${plusBtn}
-                <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>
-            </div>`;
+            <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
         container.appendChild(row);
     });
-
-    if(!document.getElementById('plus-style')){
-        const st = document.createElement('style');
-        st.id = 'plus-style';
-        st.innerHTML = `
-            .plus-add-btn { 
-                width: 32px; height: 32px; border-radius: 50%; 
-                background: var(--primary); color: white; 
-                display: flex; align-items: center; justify-content: center; 
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            }
-            .plus-add-btn span {
-                font-size: 24px; font-weight: bold; line-height: 0; margin-top: -2px;
-            }
-        `;
-        document.head.appendChild(st);
-    }
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
@@ -434,24 +416,24 @@ function openSwap(mesto, isAddingExtra = false) {
         div.onclick = (e) => {
             haptic(40);
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            const тренутноИме = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
-            if(isAddingExtra && mesto === "Портирница") {
-                if(!trenutniIme.includes(w)) {
-                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = trenutniIme + ", " + w;
+            if(isAddingExtra && mesto === "Портирница" && тренутноИме !== "—") {
+                if(!тренутноИме.includes(w)) {
+                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = тренутноИме + ", " + w;
                 }
             } else {
                 let rotiranaSmena = "";
                 ["1", "2", "3"].forEach(s => {
                     if(s === smenaTrenutna) return;
                     const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
-                    const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
-                    if(imeUSmeni === w) rotiranaSmena = s;
+                    const имеУСмени = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
+                    if(имеУСмени === w) rotiranaSmena = s;
                 });
 
                 if (rotiranaSmena) {
-                    if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                        replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
+                    if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${тренутноИме}?`)) {
+                        replacements[`${dan}-${rotiranaSmena}-${mesto}`] = тренутноИме;
                         replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
                     } else {
                         closeModal(); return; 
