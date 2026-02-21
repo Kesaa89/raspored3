@@ -22,12 +22,6 @@
             --border: #d6e3ff;
             --card-radius: 32px;
             --ripple-color: rgba(0, 71, 152, 0.2);
-            /* Нове контрастније боје позиција */
-            --color-uprava: #FF8C00;    /* Наранџаста */
-            --color-tehnika: #007AFF;   /* Краљевско плава */
-            --color-teren: #28CD41;     /* Свежа зелена */
-            --color-most: #5856D6;      /* Индиго */
-            --color-logistika: #FFCC00; /* Златна/Жута (за већи контраст) */
         }
 
         @media (prefers-color-scheme: dark) {
@@ -52,6 +46,7 @@
 
         #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--on-surface-variant); font-size: 13px; font-weight: 700; transition: height 0.2s; }
         
+        /* ПАМЕТНА ПОРУКА ИЗНАД НАВИГАЦИЈЕ */
         #smart-hint { 
             position: fixed; 
             bottom: 100px; 
@@ -111,31 +106,6 @@
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* Нови стилови за заобљене и раздвојене маркере */
-        .worker-item-container { 
-            position: relative; 
-            padding-left: 20px !important; 
-            margin-bottom: 2px;
-        }
-        .worker-item-container::before {
-            content: "";
-            position: absolute;
-            left: 6px;
-            top: 15%;
-            height: 70%;
-            width: 5px;
-            background-color: var(--marker-color, transparent);
-            border-radius: 10px;
-        }
-
-        .legend-card { background: var(--surface-variant); border-radius: var(--card-radius); padding: 24px; border: 1px solid var(--border); margin-top: 20px; }
-        .legend-item { display: flex; align-items: center; gap: 15px; margin-bottom: 16px; }
-        .legend-item:last-child { margin-bottom: 0; }
-        .legend-circle { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-        .legend-text { display: flex; flex-direction: column; gap: 2px; }
-        .legend-group-name { font-size: 14px; font-weight: 800; color: var(--on-surface); }
-        .legend-group-mesta { font-size: 11px; font-weight: 600; color: var(--on-surface-variant); opacity: 0.7; }
-
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: var(--bg); }
@@ -179,54 +149,10 @@
     </div>
 
     <div id="tab-i" class="tab-pane hidden">
-        <div class="card" style="padding: 20px; background: var(--surface-variant); border-radius: var(--card-radius); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
             <div style="font-weight: 800; font-size: 18px; margin-bottom: 5px;">v4.9.6 Стабилна</div>
-            <button onclick="clearReplacements()" class="btn-action" style="width:100%; color:#f59e0b; border-color:#f59e0b; cursor: pointer; background: transparent;">Поништи све замене</button>
-            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer; background: transparent;">Обриши све податке</button>
-        </div>
-
-        <div class="legend-card">
-            <div style="font-weight: 800; font-size: 16px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary);">Легенда позиција</div>
-            
-            <div class="legend-item">
-                <div class="legend-circle" style="background: var(--color-uprava);"></div>
-                <div class="legend-text">
-                    <span class="legend-group-name">Улаз и Управа</span>
-                    <span class="legend-group-mesta">Портирница, Управна зграда</span>
-                </div>
-            </div>
-
-            <div class="legend-item">
-                <div class="legend-circle" style="background: var(--color-tehnika);"></div>
-                <div class="legend-text">
-                    <span class="legend-group-name">Технички објекти</span>
-                    <span class="legend-group-mesta">Н. глава, У. глава, Разводно, Пут Кл-Те</span>
-                </div>
-            </div>
-
-            <div class="legend-item">
-                <div class="legend-circle" style="background: var(--color-teren);"></div>
-                <div class="legend-text">
-                    <span class="legend-group-name">Терен и Патроле</span>
-                    <span class="legend-group-mesta">Патрола 1, Патрола 2</span>
-                </div>
-            </div>
-
-            <div class="legend-item">
-                <div class="legend-circle" style="background: var(--color-most);"></div>
-                <div class="legend-text">
-                    <span class="legend-group-name">Специфичне тачке</span>
-                    <span class="legend-group-mesta">Мост</span>
-                </div>
-            </div>
-
-            <div class="legend-item">
-                <div class="legend-circle" style="background: var(--color-logistika);"></div>
-                <div class="legend-text">
-                    <span class="legend-group-name">Логистика</span>
-                    <span class="legend-group-mesta">Магацин, Депонија, Хала</span>
-                </div>
-            </div>
+            <button onclick="clearReplacements()" class="btn-action" style="width:100%; color:#f59e0b; border-color:#f59e0b; cursor: pointer;">Поништи све замене</button>
+            <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши све податке</button>
         </div>
     </div>
 </div>
@@ -251,17 +177,8 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- ЛОГИКА БОЈА ПО ПОЗИЦИЈАМА (АЖУРИРАНО) ---
-function getMestoColor(mesto) {
-    if (mesto === "Портирница" || mesto === "Управна зграда") return "var(--color-uprava)";
-    if (mesto === "Низводна глава" || mesto === "Узводна глава" || mesto === "Разводно постројење" || mesto === "Пут Кладово Текија") return "var(--color-tehnika)";
-    if (mesto === "Патрола 1" || mesto === "Патрола 2") return "var(--color-teren)";
-    if (mesto === "Мост") return "var(--color-most)";
-    if (mesto === "Магацин Караташ" || mesto === "Депонија Нови Сип" || mesto === "Спортска хала") return "var(--color-logistika)";
-    return "transparent";
-}
-
 // --- НОВЕ ФУНКЦИЈЕ ЗА ONE-TAP ---
+
 function shouldShowOneTap() {
     const now = new Date();
     const h = now.getHours();
@@ -317,6 +234,7 @@ function updateOneTapVisibility() {
 setInterval(updateOneTapVisibility, 60000);
 
 // --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
+
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 function createRipple(event) {
     const button = event.currentTarget;
@@ -459,11 +377,9 @@ function renderList() {
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
-        const color = getMestoColor(m);
-
+        
         const row = document.createElement('div');
-        row.className = `mesto-row ripple worker-item-container ${isReplaced ? 'has-replacement' : ''}`;
-        row.style.setProperty('--marker-color', color);
+        row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
         row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
@@ -484,36 +400,37 @@ function openSwap(mesto) {
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
+        // Провера умора
         let isTired = false;
         if(dan > 1 && smenaTrenutna === "1") {
             const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
             if(radioJuče) isTired = true;
         }
 
+        // --- ИЗВЛАЧЕЊЕ РАДНОГ МЕСТА ДИРЕКТНО ИЗ БАЗЕ ---
         const radnikInfo = rawData.find(r => r.ime === w);
         const radnoMesto = radnikInfo ? radnikInfo.mesto : "Off";
-        const workerColor = getMestoColor(radnoMesto);
 
         const div = document.createElement('div');
-        div.className = "ripple worker-item-container"; 
-        div.style.padding = '18px 18px 18px 24px'; 
+        div.className = "ripple"; 
+        div.style.padding = '18px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
-        div.style.setProperty('--marker-color', workerColor);
 
+        // Име колеге (наранџасто ако је уморан)
         const nameSpan = document.createElement('span');
         nameSpan.innerText = w;
-        nameSpan.style.fontWeight = '700';
+        nameSpan.style.fontWeight = '600';
         if(isTired) nameSpan.style.color = '#f39c12';
         
+        // Назив радног места (сиво и десно поравнато)
         const placeSpan = document.createElement('span');
         placeSpan.innerText = radnoMesto;
         placeSpan.style.fontSize = '11px';
-        placeSpan.style.opacity = '0.6';
-        placeSpan.style.fontWeight = '800';
-        placeSpan.style.textTransform = 'uppercase';
+        placeSpan.style.opacity = '0.5';
+        placeSpan.style.fontWeight = '500';
 
         div.appendChild(nameSpan);
         div.appendChild(placeSpan);
