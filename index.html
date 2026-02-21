@@ -106,6 +106,36 @@
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
+        /* СПЕЦИЈАЛНИ СТИЛОВИ ЗА ПРЕТРАГУ КОЈА НЕ БЕЖИ */
+        #search-wrapper { 
+            position: sticky; 
+            top: 0; 
+            background: var(--bg); 
+            padding-bottom: 15px; 
+            z-index: 10; 
+            margin-top: -5px;
+        }
+        #worker-search {
+            width: 100%;
+            padding: 16px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            background: var(--surface-variant);
+            color: var(--on-surface);
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
+        }
+        #modalContainer {
+            background: var(--bg); 
+            width: 100%; 
+            min-height: 80vh; 
+            max-height: 85vh; 
+            border-radius: 32px 32px 0 0; 
+            padding: 24px; 
+            overflow-y: auto;
+        }
+
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: var(--bg); }
@@ -158,8 +188,15 @@
 </div>
 
 <div id="swapModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1000; backdrop-filter: blur(8px);">
-    <div style="background: var(--bg); width: 100%; max-height: 80vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto;">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 10px;">✕</span></div>
+    <div id="modalContainer">
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            Замена <span onclick="closeModal()" style="cursor:pointer; padding: 5px 15px; font-size: 24px;">✕</span>
+        </div>
+        
+        <div id="search-wrapper">
+            <input type="text" id="worker-search" placeholder="Претражи колегу или место..." autocomplete="off" spellcheck="false" oninput="filterWorkers()">
+        </div>
+
         <div id="workerList"></div>
     </div>
 </div>
@@ -169,7 +206,7 @@
 <div class="nav">
     <div class="nav-item active ripple" onclick="showTab('u', 'Преглед', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
     <div class="nav-item ripple" onclick="showTab('s', 'План', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-    <div class="nav-item ripple" onclick="showTab('i', 'Инфо', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+    <div class="nav-item ripple" onclick="showTab('i', 'Инфо', this)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" cy="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
 </div>
 <script>
 let rawData = [];
@@ -177,8 +214,17 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- НОВЕ ФУНКЦИЈЕ ЗА ONE-TAP ---
+// --- НОВА ФУНКЦИЈА ЗА ПРЕТРАГУ (LIVE SEARCH) ---
+function filterWorkers() {
+    const query = document.getElementById('worker-search').value.toLowerCase();
+    const items = document.querySelectorAll('#workerList .worker-item-row');
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+    });
+}
 
+// --- ONE-TAP ЛОГИКА ---
 function shouldShowOneTap() {
     const now = new Date();
     const h = now.getHours();
@@ -234,7 +280,6 @@ function updateOneTapVisibility() {
 setInterval(updateOneTapVisibility, 60000);
 
 // --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
-
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 function createRipple(event) {
     const button = event.currentTarget;
@@ -395,37 +440,36 @@ function renderList() {
 function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
+    const searchInput = document.getElementById('worker-search');
+    searchInput.value = ""; // Ресет претраге
+    
     const dan = parseInt(document.getElementById('danSel').value);
     const smenaTrenutna = document.getElementById('smenaSel').value;
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
-        // Провера умора
         let isTired = false;
         if(dan > 1 && smenaTrenutna === "1") {
             const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
             if(radioJuče) isTired = true;
         }
 
-        // --- ИЗВЛАЧЕЊЕ РАДНОГ МЕСТА ДИРЕКТНО ИЗ БАЗЕ ---
         const radnikInfo = rawData.find(r => r.ime === w);
         const radnoMesto = radnikInfo ? radnikInfo.mesto : "Off";
 
         const div = document.createElement('div');
-        div.className = "ripple"; 
+        div.className = "ripple worker-item-row"; // Додата класа за филтрирање
         div.style.padding = '18px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
 
-        // Име колеге (наранџасто ако је уморан)
         const nameSpan = document.createElement('span');
         nameSpan.innerText = w;
         nameSpan.style.fontWeight = '600';
         if(isTired) nameSpan.style.color = '#f39c12';
         
-        // Назив радног места (сиво и десно поравнато)
         const placeSpan = document.createElement('span');
         placeSpan.innerText = radnoMesto;
         placeSpan.style.fontSize = '11px';
@@ -463,7 +507,10 @@ function openSwap(mesto) {
         };
         listCont.appendChild(div);
     });
+    
     document.getElementById('swapModal').style.display = 'flex';
+    // Ауто-фокус на претрагу чим се отвори модал
+    setTimeout(() => searchInput.focus(), 100);
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
