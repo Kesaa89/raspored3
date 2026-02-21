@@ -295,14 +295,14 @@ function renderDashboard() {
 
     let previewHtml = "";
     ["Портирница", "Патрола 1", "Патрола 2"].forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = rawData.find(r => r.mesto === m && String(r.raspored[dan-1]).trim() === smena);
         const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
         previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
     });
 
     let zameneHtml = "";
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = rawData.find(r => r.mesto === m && String(r.raspored[dan-1]).trim() === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${dan}-${smena}-${m}`];
         if (replaced) {
@@ -373,7 +373,7 @@ function renderList() {
     const container = document.getElementById('lista-prikaz');
     container.innerHTML = "";
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = rawData.find(r => r.mesto === m && String(r.raspored[dan-1]).trim() === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
@@ -397,18 +397,18 @@ function openSwap(mesto) {
     listCont.innerHTML = "";
     const dan = parseInt(document.getElementById('danSel').value);
     const smenaTrenutna = document.getElementById('smenaSel').value;
-    const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
+    const allWorkers = [...new Set(rawData.map(r => r.ime.trim()))].sort();
 
     allWorkers.forEach(w => {
-        // --- ПАМЕТНА ПРОВЕРА ЗА УМОР ---
+        // Провера умора
         let isTired = false;
         if(dan > 1 && smenaTrenutna === "1") {
-            const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
+            const radioJuče = rawData.find(r => r.ime.trim() === w && String(r.raspored[dan-2]).trim() === "3");
             if(radioJuče) isTired = true;
         }
 
-        // --- НОВО: ГДЕ ЈЕ КОЛЕГА ПО РАСПОРЕДУ ---
-        const rRad = rawData.find(r => r.ime === w && r.raspored[dan-1] === smenaTrenutna);
+        // Проналажење места у тренутној смени - додато .trim() за сигурност
+        const rRad = rawData.find(r => r.ime.trim() === w && String(r.raspored[dan-1]).trim() === smenaTrenutna);
         const rasporedMesto = rRad ? rRad.mesto : "Off";
 
         const div = document.createElement('div');
@@ -419,7 +419,6 @@ function openSwap(mesto) {
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
         
-        // Креирамо унутрашњи HTML за симетричан приказ
         div.innerHTML = `
             <span style="font-weight: 600; ${isTired ? 'color: #f39c12;' : ''}">${w}</span>
             <span style="font-size: 11px; opacity: 0.5; font-weight: 500; text-align: right;">${rasporedMesto}</span>
@@ -427,13 +426,13 @@ function openSwap(mesto) {
 
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
+            const radnikIzBaze = rawData.find(r => r.mesto === mesto && String(r.raspored[dan-1]).trim() === smenaTrenutna);
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
                 if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
+                const rS = rawData.find(rd => rd.mesto === mesto && String(rd.raspored[dan-1]).trim() === s);
                 const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
@@ -448,7 +447,7 @@ function openSwap(mesto) {
             } else {
                 replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
             }
-            localStorage.setItem('rucне_замене', JSON.stringify(replacements));
+            localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
@@ -481,7 +480,7 @@ function generateText() {
     }
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
+        const radnik = rawData.find(r => r.mesto === m && String(r.raspored[danIdx-1]).trim() === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
         text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
@@ -497,7 +496,7 @@ function clearReplacements() {
     setTimeout(() => {
         if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
             replacements = {};
-            localStorage.removeItem('rucне_замене');
+            localStorage.removeItem('rucne_zamene');
             renderDashboard();
             renderList();
         }
