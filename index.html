@@ -211,6 +211,8 @@
 <script>
 let rawData = [];
 let replacements = {};
+let checkedWorkers = {}; // Памти штиклиране раднике
+
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
@@ -250,7 +252,11 @@ setInterval(checkSmenaChange, 30000);
 function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
     const savedReplacements = localStorage.getItem('rucne_zamene');
+    const savedChecked = localStorage.getItem('checked_workers');
+    
     if (savedReplacements) replacements = JSON.parse(savedReplacements);
+    if (savedChecked) checkedWorkers = JSON.parse(savedChecked);
+    
     if (saved) {
         rawData = JSON.parse(saved);
         document.getElementById('upload-section').classList.add('hidden');
@@ -267,6 +273,19 @@ function getCurrentSmena() {
     if (hour >= 15 && hour < 23) return "2";
     if (hour >= 23 || hour < 7) return "3";
     return "1";
+}
+
+// ФУНКЦИЈА ЗА ШТИКЛИРАЊЕ
+function toggleCheck(mesto, event) {
+    event.stopPropagation();
+    const dan = document.getElementById('danSel').value;
+    const smena = document.getElementById('smenaSel').value;
+    const key = `${dan}-${smena}-${mesto}`;
+    
+    checkedWorkers[key] = !checkedWorkers[key];
+    localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
+    haptic(checkedWorkers[key] ? [40, 30] : 20);
+    renderList();
 }
 
 function renderDashboard() {
@@ -361,23 +380,48 @@ function renderList() {
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
     container.innerHTML = "";
+    
+    let totalConfirmed = 0;
+
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
+        const isChecked = checkedWorkers[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
         
+        if (isChecked && originalIme !== "—") totalConfirmed++;
+
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
-        row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
-        row.innerHTML = `<div class="mesto-info">
-                <span class="mesto-name">${m}</span>
-                <span class="worker-name">${displayName}</span>
-                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
+        if (isChecked) row.style.borderLeft = "5px solid #2ecc71";
+
+        row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                <div onclick="toggleCheck('${m}', event)" style="min-width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${isChecked ? '#2ecc71' : '#ddd'}; display: flex; align-items: center; justify-content: center; background: ${isChecked ? '#2ecc71' : 'transparent'}; transition: all 0.2s;">
+                    ${isChecked ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+                </div>
+                <div class="mesto-info" onclick="haptic(30); createRipple(event); openSwap('${m}')" style="flex-grow: 1;">
+                    <span class="mesto-name">${m}</span>
+                    <span class="worker-name" style="${isChecked ? 'color: #2ecc71; font-weight: 700;' : ''}">${displayName}</span>
+                    ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
+                </div>
             </div>
             <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
         container.appendChild(row);
     });
+
+    // Додавање бројача на врх листе
+    const filterGroup = document.querySelector('.filter-group');
+    let counterLabel = document.getElementById('check-counter');
+    if (!counterLabel) {
+        counterLabel = document.createElement('div');
+        counterLabel.id = 'check-counter';
+        counterLabel.style = "text-align: right; font-size: 12px; font-weight: 800; color: var(--primary); margin: 5px 5px 10px 0;";
+        filterGroup.after(counterLabel);
+    }
+    counterLabel.innerText = `ПРИЈАВЉЕНО: ${totalConfirmed} / 12`;
+
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
@@ -425,27 +469,8 @@ function openSwap(mesto) {
 
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
-            
-            let rotiranaSmena = "";
-            ["1", "2", "3"].forEach(s => {
-                if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
-                const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
-                if(imeUSmeni === w) rotiranaSmena = s;
-            });
-
-            if (rotiranaSmena) {
-                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
-                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                } else {
-                    closeModal(); return; 
-                }
-            } else {
-                replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-            }
+            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
+            replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
             localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
@@ -495,9 +520,11 @@ async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigato
 function clearReplacements() {
     haptic(100); 
     setTimeout(() => {
-        if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
+        if(confirm("Обрисати све замене и прозивку?")) {
             replacements = {};
+            checkedWorkers = {};
             localStorage.removeItem('rucne_zamene');
+            localStorage.removeItem('checked_workers');
             renderDashboard();
             renderList();
         }
@@ -510,7 +537,7 @@ let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
 scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
-scrollArea.ontouchmove = e => {
+scrollArea.ontmove = e => {
     let diff = e.touches[0].pageY - touchStart;
     if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
 };
