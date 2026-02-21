@@ -22,12 +22,12 @@
             --border: #d6e3ff;
             --card-radius: 32px;
             --ripple-color: rgba(0, 71, 152, 0.2);
-            /* Боје позиција */
-            --color-uprava: #f39c12;    /* Наранџаста */
-            --color-tehnika: #3498db;   /* Плава */
-            --color-teren: #2ecc71;     /* Зелена */
-            --color-most: #9b59b6;      /* Љубичаста */
-            --color-logistika: #1abc9c; /* Тиркизна (уместо сиве) */
+            /* Нове контрастније боје позиција */
+            --color-uprava: #FF8C00;    /* Наранџаста */
+            --color-tehnika: #007AFF;   /* Краљевско плава */
+            --color-teren: #28CD41;     /* Свежа зелена */
+            --color-most: #5856D6;      /* Индиго */
+            --color-logistika: #FFCC00; /* Златна/Жута (за већи контраст) */
         }
 
         @media (prefers-color-scheme: dark) {
@@ -111,8 +111,23 @@
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* Стилови за Легенду и Бочне линије */
-        .worker-item-container { border-left: 4px solid transparent; padding-left: 12px !important; margin-left: 0; }
+        /* Нови стилови за заобљене и раздвојене маркере */
+        .worker-item-container { 
+            position: relative; 
+            padding-left: 20px !important; 
+            margin-bottom: 2px;
+        }
+        .worker-item-container::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 15%;
+            height: 70%;
+            width: 5px;
+            background-color: var(--marker-color, transparent);
+            border-radius: 10px;
+        }
+
         .legend-card { background: var(--surface-variant); border-radius: var(--card-radius); padding: 24px; border: 1px solid var(--border); margin-top: 20px; }
         .legend-item { display: flex; align-items: center; gap: 15px; margin-bottom: 16px; }
         .legend-item:last-child { margin-bottom: 0; }
@@ -236,7 +251,7 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- ЛОГИКА БОЈА ПО ПОЗИЦИЈАМА ---
+// --- ЛОГИКА БОЈА ПО ПОЗИЦИЈАМА (АЖУРИРАНО) ---
 function getMestoColor(mesto) {
     if (mesto === "Портирница" || mesto === "Управна зграда") return "var(--color-uprava)";
     if (mesto === "Низводна глава" || mesto === "Узводна глава" || mesto === "Разводно постројење" || mesto === "Пут Кладово Текија") return "var(--color-tehnika)";
@@ -444,9 +459,11 @@ function renderList() {
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
-        
+        const color = getMestoColor(m);
+
         const row = document.createElement('div');
-        row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
+        row.className = `mesto-row ripple worker-item-container ${isReplaced ? 'has-replacement' : ''}`;
+        row.style.setProperty('--marker-color', color);
         row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
@@ -478,14 +495,13 @@ function openSwap(mesto) {
         const workerColor = getMestoColor(radnoMesto);
 
         const div = document.createElement('div');
-        // Додата класа за бочну линију и додељена боја
         div.className = "ripple worker-item-container"; 
-        div.style.padding = '18px'; 
+        div.style.padding = '18px 18px 18px 24px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
-        div.style.borderLeftColor = workerColor;
+        div.style.setProperty('--marker-color', workerColor);
 
         const nameSpan = document.createElement('span');
         nameSpan.innerText = w;
