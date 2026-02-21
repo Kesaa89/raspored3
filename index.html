@@ -214,6 +214,37 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
+// --- МОЗАК ЗА 12ч (ПРЕЛОМ У 19ч) ---
+function getWorkerForShift(mesto, dan, smena) {
+    const hour = new Date().getHours();
+    const candidates = rawData.filter(r => r.mesto === mesto);
+    
+    if (smena === "1") {
+        return candidates.find(r => r.raspored[dan-1] === "1" || r.raspored[dan-1] === "1.");
+    }
+    if (smena === "2") {
+        // Ако се извештај/dashboard тражи пре 19ч, приоритизујемо 07-19 (1.)
+        if (hour < 19) {
+            return candidates.find(r => r.raspored[dan-1] === "1.") || candidates.find(r => r.raspored[dan-1] === "2");
+        } else {
+            // После 19ч приоритизујемо 19-07 (2.)
+            return candidates.find(r => r.raspored[dan-1] === "2.") || candidates.find(r => r.raspored[dan-1] === "2");
+        }
+    }
+    if (smena === "3") {
+        return candidates.find(r => r.raspored[dan-1] === "3" || r.raspored[dan-1] === "2.");
+    }
+    return null;
+}
+
+function getShiftLabel(worker) {
+    if (!worker) return "";
+    const symbol = worker.raspored[parseInt(document.getElementById('danSel').value) - 1];
+    if (symbol === "1.") return " (07-19)";
+    if (symbol === "2.") return " (19-07)";
+    return "";
+}
+
 // --- НОВА ФУНКЦИЈА ЗА ПРЕТРАГУ (LIVE SEARCH) ---
 function filterWorkers() {
     const query = document.getElementById('worker-search').value.toLowerCase();
@@ -331,41 +362,46 @@ function renderDashboard() {
     const smena = getCurrentSmena();
     const hour = now.getHours();
     
-    let greeting = "Добар дан";
-    if (hour >= 5 && hour < 10) greeting = "Добро јутро";
-    else if (hour >= 18 && hour < 22) greeting = "Добро вече";
-    else if (hour >= 22 || hour < 5) greeting = "Радна ноћ – Срећан рад";
-
+    let greeting = hour >= 5 && hour < 10 ? "Добро јутро" : (hour >= 18 && hour < 22 ? "Добро вече" : (hour >= 22 || hour < 5 ? "Радна ноћ" : "Добар дан"));
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
     let previewHtml = "";
     ["Портирница", "Патрола 1", "Патрола 2"].forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
-        const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
-        previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
+        const candidates = rawData.filter(r => r.mesto === m);
+        const r12_do = candidates.find(r => r.raspored[dan-1] === "1.");
+        const r12_od = candidates.find(r => r.raspored[dan-1] === "2.");
+        
+        if (smena === "2" && (r12_do || r12_od)) {
+            // ПРИКАЗ ЗА 12ч - СИМЕТРИЧНО
+            previewHtml += `
+                <div class="mini-row" style="height:auto; padding: 12px 0;">
+                    <span class="mini-mesto">${m}</span>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                        ${r12_do ? `<span class="mini-ime" style="font-size:12px; ${hour < 19 ? 'color:var(--primary); font-weight:800;' : 'opacity:0.4'}">До 19ч: ${replacements[`${dan}-${smena}-${m}`] || r12_do.ime}</span>` : ''}
+                        ${r12_od ? `<span class="mini-ime" style="font-size:12px; ${hour >= 19 ? 'color:var(--primary); font-weight:800;' : 'opacity:0.4'}">Од 19ч: ${replacements[`${dan}-${smena}-${m}`] || r12_od.ime}</span>` : ''}
+                    </div>
+                </div>`;
+        } else {
+            const radnik = getWorkerForShift(m, dan, smena);
+            const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
+            previewHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${ime}</span></div>`;
+        }
     });
 
     let zameneHtml = "";
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = getWorkerForShift(m, dan, smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${dan}-${smena}-${m}`];
         if (replaced) {
-            zameneHtml += `
-                <div class="mini-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <span class="mini-mesto" style="white-space: nowrap;">${m}</span>
-                    <span class="mini-ime" style="text-align: right; font-size: 13px; line-height: 1.2;">
-                        ${replaced}<br>
-                        <small style="opacity:0.6; font-size: 10px; font-weight: 500;">уместо ${originalIme}</small>
-                    </span>
-                </div>`;
+            zameneHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime" style="text-align:right">${replaced}<br><small style="opacity:0.6">уместо ${originalIme}</small></span></div>`;
         }
     });
 
     document.getElementById('dashboard-content').innerHTML = `
         <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
-        <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
-        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border: 1px solid var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
+        <div class="live-preview" style="max-height:350px; overflow-y:auto;"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
+        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border: 1px solid var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене</span></div>${zameneHtml}</div>` : ''}
     `;
 }
 
@@ -418,10 +454,11 @@ function renderList() {
     const container = document.getElementById('lista-prikaz');
     container.innerHTML = "";
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const radnik = getWorkerForShift(m, dan, smena);
         const originalIme = radnik ? radnik.ime : "—";
+        const label = getShiftLabel(radnik);
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
-        const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
+        const displayName = isReplaced ? `${isReplaced}${label} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme + label;
         
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
@@ -429,9 +466,8 @@ function renderList() {
         row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
-                ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
-            </div>
-            <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
+                ${originalIme !== "—" ? `<span class="swap-hint">Замени</span>` : ''}
+            </div>`;
         container.appendChild(row);
     });
     document.getElementById('action-buttons').style.display = 'grid';
@@ -441,75 +477,27 @@ function openSwap(mesto) {
     const listCont = document.getElementById('workerList');
     listCont.innerHTML = "";
     const searchInput = document.getElementById('worker-search');
-    searchInput.value = ""; // Ресет претраге
-    
+    searchInput.value = "";
     const dan = parseInt(document.getElementById('danSel').value);
     const smenaTrenutna = document.getElementById('smenaSel').value;
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
-        let isTired = false;
-        if(dan > 1 && smenaTrenutna === "1") {
-            const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
-            if(radioJuče) isTired = true;
-        }
-
+        let isTired = (dan > 1 && smenaTrenutna === "1" && rawData.find(r => r.ime === w && (r.raspored[dan-2] === "3" || r.raspored[dan-2] === "2.")));
         const radnikInfo = rawData.find(r => r.ime === w);
-        const radnoMesto = radnikInfo ? radnikInfo.mesto : "Off";
-
         const div = document.createElement('div');
-        div.className = "ripple worker-item-row"; // Додата класа за филтрирање
-        div.style.padding = '18px'; 
-        div.style.borderBottom = '1px solid var(--border)'; 
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
-        div.style.alignItems = 'center';
-
-        const nameSpan = document.createElement('span');
-        nameSpan.innerText = w;
-        nameSpan.style.fontWeight = '600';
-        if(isTired) nameSpan.style.color = '#f39c12';
-        
-        const placeSpan = document.createElement('span');
-        placeSpan.innerText = radnoMesto;
-        placeSpan.style.fontSize = '11px';
-        placeSpan.style.opacity = '0.5';
-        placeSpan.style.fontWeight = '500';
-
-        div.appendChild(nameSpan);
-        div.appendChild(placeSpan);
-
-        div.onclick = (e) => {
-            haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
-            
-            let rotiranaSmena = "";
-            ["1", "2", "3"].forEach(s => {
-                if(s === smenaTrenutna) return;
-                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
-                const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
-                if(imeUSmeni === w) rotiranaSmena = s;
-            });
-
-            if (rotiranaSmena) {
-                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
-                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                } else {
-                    closeModal(); return; 
-                }
-            } else {
-                replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-            }
+        div.className = "ripple worker-item-row";
+        div.style.padding = '18px'; div.style.borderBottom = '1px solid var(--border)';
+        div.style.display = 'flex'; div.style.justifyContent = 'space-between';
+        div.innerHTML = `<span style="font-weight:600; ${isTired ? 'color:#f39c12' : ''}">${w}</span><span style="opacity:0.5; font-size:11px;">${radnikInfo ? radnikInfo.mesto : "Off"}</span>`;
+        div.onclick = () => {
+            replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
             localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
     });
-    
     document.getElementById('swapModal').style.display = 'flex';
-    // Ауто-фокус на претрагу чим се отвори модал
     setTimeout(() => searchInput.focus(), 100);
 }
 
@@ -531,17 +519,15 @@ function generateText() {
     const now = new Date();
     let d1 = new Date(now.getFullYear(), now.getMonth(), danIdx);
     const formatDate = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
-    let datumStr = formatDate(d1);
-    if (smena === "3") {
-        let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
-        datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
-    }
+    let datumStr = smena === "3" ? `${formatDate(d1)}/${formatDate(new Date(now.getFullYear(), now.getMonth(), danIdx + 1))}` : formatDate(d1);
+    
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
-        const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
+        const radnik = getWorkerForShift(m, danIdx, smena);
         const originalIme = radnik ? radnik.ime : "—";
+        const label = getShiftLabel(radnik);
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
-        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
+        text += `${m}: ${replaced ? replaced + label + ' уместо ' + originalIme : originalIme + label}\n`;
     });
     return text;
 }
@@ -549,29 +535,14 @@ function generateText() {
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
 
-function clearReplacements() {
-    haptic(100); 
-    setTimeout(() => {
-        if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
-            replacements = {};
-            localStorage.removeItem('rucne_zamene');
-            renderDashboard();
-            renderList();
-        }
-    }, 100);
-}
-
+function clearReplacements() { haptic(100); setTimeout(() => { if(confirm("Обрисати замене?")) { replacements = {}; localStorage.removeItem('rucne_zamene'); renderDashboard(); renderList(); } }, 100); }
 function clearAppData() { haptic(100); setTimeout(() => { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }, 100); }
 
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
-const ptr = document.getElementById('ptr-indicator');
 scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
-scrollArea.ontouchmove = e => {
-    let diff = e.touches[0].pageY - touchStart;
-    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
-};
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+scrollArea.ontouchmove = e => { if (scrollArea.scrollTop === 0 && e.touches[0].pageY - touchStart > 60) document.getElementById('ptr-indicator').style.height = '40px'; };
+scrollArea.ontouchend = () => { if (document.getElementById('ptr-indicator').style.height === '40px') { haptic([60, 60]); location.reload(); } document.getElementById('ptr-indicator').style.height = '0'; };
 
 window.addEventListener('load', updateOneTapVisibility);
 </script>
