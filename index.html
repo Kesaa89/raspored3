@@ -211,7 +211,7 @@
 <script>
 let rawData = [];
 let replacements = {};
-let checkedWorkers = {}; // Памти штиклиране раднике
+let checkedWorkers = {}; // Нова табела за прозивку
 
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
@@ -253,10 +253,10 @@ function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
     const savedReplacements = localStorage.getItem('rucne_zamene');
     const savedChecked = localStorage.getItem('checked_workers');
-    
+
     if (savedReplacements) replacements = JSON.parse(savedReplacements);
     if (savedChecked) checkedWorkers = JSON.parse(savedChecked);
-    
+
     if (saved) {
         rawData = JSON.parse(saved);
         document.getElementById('upload-section').classList.add('hidden');
@@ -275,16 +275,16 @@ function getCurrentSmena() {
     return "1";
 }
 
-// ФУНКЦИЈА ЗА ШТИКЛИРАЊЕ (TOGGLE)
+// ФУНКЦИЈА ЗА ПРОЗИВКУ (ШТИКЛИРАЊЕ)
 function toggleCheck(mesto, event) {
-    event.stopPropagation();
+    event.stopPropagation(); // Ово спречава да се отвори замена кад штиклираш
     const dan = document.getElementById('danSel').value;
     const smena = document.getElementById('smenaSel').value;
-    const key = `${dan}-${smena}-${mesto}`;
+    const кључ = `${dan}-${smena}-${mesto}`;
     
-    checkedWorkers[key] = !checkedWorkers[key];
+    checkedWorkers[кључ] = !checkedWorkers[кључ];
     localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
-    haptic(checkedWorkers[key] ? [40, 30] : 20);
+    haptic(checkedWorkers[кључ] ? [40, 30] : 20);
     renderList();
 }
 
@@ -395,13 +395,15 @@ function renderList() {
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
         if (isChecked) row.style.borderLeft = "5px solid #2ecc71";
+        
+        row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
 
         row.innerHTML = `
             <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                <div onclick="toggleCheck('${m}', event)" style="min-width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${isChecked ? '#2ecc71' : '#ddd'}; display: flex; align-items: center; justify-content: center; background: ${isChecked ? '#2ecc71' : 'transparent'}; transition: all 0.2s;">
-                    ${isChecked ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+                <div onclick="toggleCheck('${m}', event)" style="min-width: 26px; height: 26px; border-radius: 50%; border: 2px solid ${isChecked ? '#2ecc71' : '#ddd'}; display: flex; align-items: center; justify-content: center; background: ${isChecked ? '#2ecc71' : 'transparent'}; transition: all 0.2s;">
+                    ${isChecked ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
                 </div>
-                <div class="mesto-info" onclick="haptic(30); createRipple(event); openSwap(m)" style="flex-grow: 1;">
+                <div class="mesto-info" style="flex-grow: 1;">
                     <span class="mesto-name">${m}</span>
                     <span class="worker-name" style="${isChecked ? 'color: #2ecc71; font-weight: 700;' : ''}">${displayName}</span>
                     ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
@@ -411,7 +413,7 @@ function renderList() {
         container.appendChild(row);
     });
 
-    // Додавање бројача на врх листе (дискретно)
+    // Бројач пријављених
     const filterGroup = document.querySelector('.filter-group');
     let counterLabel = document.getElementById('check-counter');
     if (!counterLabel) {
@@ -470,7 +472,7 @@ function openSwap(mesto) {
         div.onclick = (e) => {
             haptic(40);
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            const trenutниIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
@@ -480,15 +482,15 @@ function openSwap(mesto) {
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
 
-            // Опција А: Приликом замене, поништи штиклу за то место
+            // Опција А: Скини штиклу чим се деси замена
             delete checkedWorkers[`${dan}-${smenaTrenutna}-${mesto}`];
             localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
 
             if (rotiranaSmena) {
-                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
+                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutниIme}?`)) {
+                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutниIme;
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                    delete checkedWorkers[`${dan}-${rotiranaSmena}-${mesto}`]; // Поништи штиклу и за ротирану смену
+                    delete checkedWorkers[`${dan}-${rotiranaSmena}-${mesto}`]; // Скини и ротираноме
                     localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
                 } else {
                     closeModal(); return; 
@@ -503,7 +505,6 @@ function openSwap(mesto) {
     });
     
     document.getElementById('swapModal').style.display = 'flex';
-    // Избачен сетаутофокус да не искаче тастатура сама
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
