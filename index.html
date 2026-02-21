@@ -402,21 +402,29 @@ function openSwap(mesto) {
     allWorkers.forEach(w => {
         // --- ПАМЕТНА ПРОВЕРА ЗА УМОР ---
         let isTired = false;
-        // Проверавамо само ако је изабрана 1. смена и ако није први дан у месецу
         if(dan > 1 && smenaTrenutna === "1") {
             const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
             if(radioJuče) isTired = true;
         }
 
+        // --- НОВО: ГДЕ ЈЕ КОЛЕГА ПО РАСПОРЕДУ ---
+        const rRad = rawData.find(r => r.ime === w && r.raspored[dan-1] === smenaTrenutna);
+        const rasporedMesto = rRad ? rRad.mesto : "Off";
+
         const div = document.createElement('div');
         div.className = "ripple"; 
         div.style.padding = '18px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
-        div.style.fontWeight = '600';
-        // Ако је уморан, бојимо име у наранџасто
-        if(isTired) div.style.color = '#f39c12';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
         
-        div.innerText = w;
+        // Креирамо унутрашњи HTML за симетричан приказ
+        div.innerHTML = `
+            <span style="font-weight: 600; ${isTired ? 'color: #f39c12;' : ''}">${w}</span>
+            <span style="font-size: 11px; opacity: 0.5; font-weight: 500; text-align: right;">${rasporedMesto}</span>
+        `;
+
         div.onclick = (e) => {
             haptic(40);
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
@@ -440,7 +448,7 @@ function openSwap(mesto) {
             } else {
                 replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
             }
-            localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
+            localStorage.setItem('rucне_замене', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
@@ -489,7 +497,7 @@ function clearReplacements() {
     setTimeout(() => {
         if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
             replacements = {};
-            localStorage.removeItem('rucne_zamene');
+            localStorage.removeItem('rucне_замене');
             renderDashboard();
             renderList();
         }
