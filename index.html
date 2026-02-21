@@ -177,7 +177,7 @@ let replacements = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- ONE-TAP ЛОГИКА ---
+// --- НОВЕ ФУНКЦИЈЕ ЗА ONE-TAP ---
 
 function shouldShowOneTap() {
     const now = new Date();
@@ -233,7 +233,7 @@ function updateOneTapVisibility() {
 
 setInterval(updateOneTapVisibility, 60000);
 
-// --- ГЛАВНЕ ФУНКЦИЈЕ ---
+// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
 
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 function createRipple(event) {
@@ -400,8 +400,9 @@ function openSwap(mesto) {
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
-        // ПАМЕТНА ПРОВЕРА ЗА УМОР: Боји у наранџасто само ако је радио 3. смену јуче, а сада гледамо 1. смену
+        // --- ПАМЕТНА ПРОВЕРА ЗА УМОР ---
         let isTired = false;
+        // Проверавамо само ако је изабрана 1. смена и ако није први дан у месецу
         if(dan > 1 && smenaTrenutna === "1") {
             const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
             if(radioJuče) isTired = true;
@@ -412,41 +413,33 @@ function openSwap(mesto) {
         div.style.padding = '18px'; 
         div.style.borderBottom = '1px solid var(--border)'; 
         div.style.fontWeight = '600';
-        div.style.color = isTired ? '#f39c12' : 'inherit'; 
-        div.innerText = w;
+        // Ако је уморан, бојимо име у наранџасто
+        if(isTired) div.style.color = '#f39c12';
         
+        div.innerText = w;
         div.onclick = (e) => {
             haptic(40);
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const тренутниИме = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
-            if(mesto === "Портирница" && тренутниИме !== "—" && тренутниИме !== w) {
-                if(confirm(`Да ли колега ${w} МЕЊА постојећег радника?\n\n(ОК = Замена, Cancel = Додај као појачање)`)) {
+            let rotiranaSmena = "";
+            ["1", "2", "3"].forEach(s => {
+                if(s === smenaTrenutna) return;
+                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
+                const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
+                if(imeUSmeni === w) rotiranaSmena = s;
+            });
+
+            if (rotiranaSmena) {
+                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
+                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
                 } else {
-                    if(!тренутниИме.includes(w)) {
-                        replacements[`${dan}-${smenaTrenutna}-${mesto}`] = тренутниИме + ", " + w;
-                    }
+                    closeModal(); return; 
                 }
             } else {
-                let rotiranaSmena = "";
-                ["1", "2", "3"].forEach(s => {
-                    if(s === smenaTrenutna) return;
-                    const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
-                    const имеУСмени = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
-                    if(имеУСмени === w) rotiranaSmena = s;
-                });
-
-                if (rotiranaSmena) {
-                    if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${тренутниИме}?`)) {
-                        replacements[`${dan}-${rotiranaSmena}-${mesto}`] = тренутниИме;
-                        replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                    } else { closeModal(); return; }
-                } else {
-                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                }
+                replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
             }
-            
             localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
             closeModal(); renderList(); renderDashboard();
         };
@@ -483,12 +476,7 @@ function generateText() {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
-        
-        if(m === "Портирница" && replaced && replaced.includes(",")) {
-            text += `${m}: ${replaced}\n`;
-        } else {
-            text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
-        }
+        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
     });
     return text;
 }
