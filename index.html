@@ -183,34 +183,25 @@ function haptic(pattern = 30) {
     if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); 
 }
 
-// Проверава да ли је време за One-Tap Viber дугме (30 мин од почетка смене)
 function shouldShowOneTap() {
     const now = new Date();
     const h = now.getHours();
     const m = now.getMinutes();
-    // Смене почињу у 07:00, 15:00, 23:00. Прозор је 30 минута.
     const isMorning = (h === 7 && m <= 30);
     const isAfternoon = (h === 15 && m <= 30);
     const isNight = (h === 23 && m <= 30);
     return isMorning || isAfternoon || isNight;
 }
 
-// Функција за One-Tap акцију
 async function handleOneTap(e) {
     haptic([100, 50, 100]);
     const text = generateText();
     await navigator.clipboard.writeText(text);
-    // Отвара Вибер (директан линк)
     window.location.href = "viber://forward?text=" + encodeURIComponent(""); 
-    // Напомена: Viber не дозвољава увек пренос текста директно у групу преко URL-а због приватности,
-    // али ће се апликација отворити, а текст је већ у Clipboard-у за "Paste".
-    
-    // Склањамо дугме након клика
     const btn = document.getElementById('viber-one-tap');
     if(btn) btn.style.display = 'none';
 }
 
-// Иницијализација One-Tap дугмета (ФАБ који пулсира)
 function updateOneTapVisibility() {
     let btn = document.getElementById('viber-one-tap');
     if (shouldShowOneTap()) {
@@ -218,7 +209,6 @@ function updateOneTapVisibility() {
             btn = document.createElement('div');
             btn.id = 'viber-one-tap';
             btn.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M17.5 12c0 3.037-2.463 5.5-5.5 5.5S6.5 15.037 6.5 12s2.463-5.5 5.5-5.5 5.5 2.463 5.5 5.5zm-5.5 7.5c4.142 0 7.5-3.358 7.5-7.5s-3.358-7.5-7.5-7.5-7.5 3.358-7.5 7.5 3.358 7.5 7.5 7.5zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>`;
-            // Стилови за љубичасто пулсирајуће дугме доле десно
             Object.assign(btn.style, {
                 position: 'fixed', bottom: '85px', right: '20px',
                 width: '60px', height: '60px', borderRadius: '50%',
@@ -226,11 +216,10 @@ function updateOneTapVisibility() {
                 justifyContent: 'center', boxShadow: '0 4px 15px rgba(115,96,242,0.4)',
                 zIndex: '9999', cursor: 'pointer', transition: 'all 0.3s'
             });
-            btn.classList.add('pulse-animation'); // Додати у CSS ако постоји или креирати доле
+            btn.classList.add('pulse-animation');
             btn.onclick = handleOneTap;
             document.body.appendChild(btn);
             
-            // Динамички додајемо анимацију ако је нема
             if (!document.getElementById('viber-style')) {
                 const style = document.createElement('style');
                 style.id = 'viber-style';
@@ -246,10 +235,9 @@ function updateOneTapVisibility() {
     }
 }
 
-// Позивај проверу времена сваки минут
 setInterval(updateOneTapVisibility, 60000);
 
-// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ СА ИЗМЕНАМА ---
+// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
 
 function createRipple(event) {
     const button = event.currentTarget;
@@ -281,7 +269,7 @@ function checkStorage() {
         document.getElementById('upload-section').classList.add('hidden');
         setupFilters();
         renderDashboard();
-        updateOneTapVisibility(); // Провери дугме при уласку
+        updateOneTapVisibility();
     } else {
         document.getElementById('upload-section').classList.remove('hidden');
         document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>Добродошли</h2><p>Учитајте распоред да бисте почели.</p></div>`;
@@ -396,10 +384,9 @@ function renderList() {
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
         
-        // Убацивање ПЛУС дугмета само за Портирницу
         let plusBtn = "";
         if(m === "Портирница") {
-            plusBtn = `<div class="plus-add-btn" onclick="event.stopPropagation(); haptic(40); openSwap('Портирница', true);">+</div>`;
+            plusBtn = `<div class="plus-add-btn" onclick="event.stopPropagation(); haptic(40); openSwap('Портирница', true);"><span>+</span></div>`;
         }
 
         row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
@@ -415,14 +402,22 @@ function renderList() {
         container.appendChild(row);
     });
 
-    // Стил за ПЛУС дугме
     if(!document.getElementById('plus-style')){
         const st = document.createElement('style');
         st.id = 'plus-style';
-        st.innerHTML = `.plus-add-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }`;
+        st.innerHTML = `
+            .plus-add-btn { 
+                width: 32px; height: 32px; border-radius: 50%; 
+                background: var(--primary); color: white; 
+                display: flex; align-items: center; justify-content: center; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            }
+            .plus-add-btn span {
+                font-size: 24px; font-weight: bold; line-height: 0; margin-top: -2px;
+            }
+        `;
         document.head.appendChild(st);
     }
-
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
@@ -442,12 +437,10 @@ function openSwap(mesto, isAddingExtra = false) {
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             if(isAddingExtra && mesto === "Портирница") {
-                // Додавање другог имена (ако већ не постоји то име у запису)
                 if(!trenutniIme.includes(w)) {
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = trenutniIme + ", " + w;
                 }
             } else {
-                // Стандардна замена / ротација
                 let rotiranaSmena = "";
                 ["1", "2", "3"].forEach(s => {
                     if(s === smenaTrenutna) return;
@@ -503,8 +496,6 @@ function generateText() {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${danIdx}-${smena}-${m}`];
-        
-        // Посебна провера за Портирницу (ако има више имена)
         if(m === "Портирница" && replaced && replaced.includes(",")) {
             text += `${m}: ${replaced}\n`;
         } else {
@@ -541,7 +532,6 @@ scrollArea.ontouchmove = e => {
 };
 scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
 
-// Покретање провере за One-Tap при учитавању
 window.addEventListener('load', updateOneTapVisibility);
 </script>
 </body>
