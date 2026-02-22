@@ -100,34 +100,33 @@
         select { width: 100%; padding: 18px; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-variant); color: var(--on-surface); font-size: 16px; font-weight: 700; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; background-size: 18px; }
 
         .mesto-row { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 18px 14px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 18px; }
-        .mesto-row.has-replacement { background: var(--border); }
+        .mesto-row.has-replacement { background: var(--primary-container); opacity: 0.95; }
         .mesto-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .mesto-name { font-size: 11px; color: var(--on-surface-variant); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* НОВО: ЧЕК ЛИСТА СТИЛОВИ */
+        /* ПОПРАВЉЕН КРУЖИЋ */
         .check-circle { 
-            width: 24px; 
-            height: 24px; 
-            border: 2px solid var(--border); 
+            width: 26px; 
+            height: 26px; 
+            border: 2px solid var(--on-surface-variant); 
             border-radius: 50%; 
             margin-right: 15px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             transition: all 0.2s; 
-            background: transparent;
+            background: var(--bg);
+            flex-shrink: 0;
+            z-index: 5;
         }
         .check-circle.checked { 
-            background: var(--check-green); 
-            border-color: var(--check-green); 
+            background: var(--check-green) !important; 
+            border-color: var(--check-green) !important; 
         }
-        .check-circle svg { 
-            width: 16px; 
-            height: 16px; 
-            fill: white; 
-        }
+        .check-circle svg { width: 18px; height: 18px; fill: white; }
+
         #count-summary { 
             font-size: 11px; 
             font-weight: 900; 
@@ -278,7 +277,6 @@ function checkSmenaChange() {
 }
 setInterval(checkSmenaChange, 30000);
 
-// НОВО: Функција за штиклирање
 function toggleCheck(mesto, event) {
     event.stopPropagation();
     const dan = document.getElementById('danSel').value;
@@ -420,7 +418,7 @@ function renderList() {
         const isChecked = checkedWorkers[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
         
-        if (isChecked && originalIme !== "—") confirmedCount++;
+        if (isChecked && (isReplaced || originalIme !== "—")) confirmedCount++;
 
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
@@ -500,14 +498,12 @@ function openSwap(mesto) {
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
 
-            // Поништавамо штиклу на том месту код замене
             delete checkedWorkers[`${dan}-${smenaTrenutna}-${mesto}`];
 
             if (rotiranaSmena) {
                 if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
                     replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-                    // Поништи и штиклу ротираног службеника
                     delete checkedWorkers[`${dan}-${rotiranaSmena}-${mesto}`];
                 } else {
                     closeModal(); return; 
@@ -523,7 +519,6 @@ function openSwap(mesto) {
     });
     
     document.getElementById('swapModal').style.display = 'flex';
-    // УКЛОЊЕН .focus() ДА НЕ ИСКАЧЕ ТАСТАТУРА
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
