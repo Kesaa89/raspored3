@@ -216,11 +216,11 @@ function checkAttendanceTime() {
     const now = new Date();
     const time = now.getHours() * 60 + now.getMinutes();
     
-    // Дефинисани прозори: 7:15-7:45, 15:15-15:45, 23:15-23:45
+    // Дефинисани прозори: 7:00-7:30, 15:00-15:30, 23:00-23:30
     const windows = [
-        {start: 7*60+15, end: 7*60+45},
-        {start: 15*60+15, end: 15*60+45},
-        {start: 23*60+15, end: 23*60+45}
+        {start: 7*60+0, end: 7*60+30},
+        {start: 15*60+0, end: 15*60+30},
+        {start: 23*60+0, end: 23*60+30}
     ];
 
     const isInsideWindow = windows.some(w => time >= w.start && time <= w.end);
