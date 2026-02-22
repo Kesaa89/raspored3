@@ -22,6 +22,8 @@
             --border: #d6e3ff;
             --card-radius: 32px;
             --ripple-color: rgba(0, 71, 152, 0.2);
+            /* Нова суптилна боја за штиклирање */
+            --check-green: #22c55e;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -76,6 +78,21 @@
         
         .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; position: relative; }
 
+        /* НОВО: СТИЛ ЗА КАРТИЦУ ПРОЗИВКЕ НА ПОЧЕТНОМ ЕКРАНУ */
+        .attendance-card { 
+            background: var(--surface-variant); 
+            border: 2px solid var(--primary); 
+            border-radius: var(--card-radius); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            cursor: pointer;
+        }
+        .attendance-info h3 { margin: 0; font-size: 16px; font-weight: 800; }
+        .attendance-info p { margin: 4px 0 0; font-size: 12px; font-weight: 600; opacity: 0.7; }
+
         .welcome-card { background: var(--primary-container); color: var(--on-primary-container); border-radius: var(--card-radius); padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
         .welcome-card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
         .welcome-card p { margin: 0; opacity: 0.8; font-weight: 600; font-size: 14px; }
@@ -105,6 +122,13 @@
         .mesto-name { font-size: 11px; color: var(--on-surface-variant); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+
+        /* НОВО: СТИЛ ЗА ЧЕК ЛИСТУ УНУТАР МОДАЛА */
+        .check-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .check-box { width: 26px; height: 26px; border: 2px solid var(--primary); border-radius: 8px; margin-right: 15px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .check-box.checked { background: var(--check-green); border-color: var(--check-green); }
+        .check-box svg { stroke: white; display: none; }
+        .check-box.checked svg { display: block; }
 
         /* СПЕЦИЈАЛНИ СТИЛОВИ ЗА ПРЕТРАГУ КОЈА НЕ БЕЖИ */
         #search-wrapper { 
@@ -136,12 +160,18 @@
             overflow-y: auto;
         }
 
+        /* НОВО: ИНФО ТАБ ЧЕК ЛИСТА ПРЕГЛЕД */
+        .info-check-list { margin-top: 20px; background: var(--surface-variant); border-radius: 24px; padding: 16px; border: 1px solid var(--border); }
+        .info-check-list h4 { margin: 0 0 12px; font-size: 14px; font-weight: 800; text-transform: uppercase; }
+
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: var(--bg); }
 
         #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 14px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 2000; }
         .hidden { display: none; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; z-index: 2100; }
     </style>
 </head>
 <body onload="checkStorage()">
@@ -153,6 +183,8 @@
 
 <div class="main-content" id="scroll-area">
     <div id="tab-u" class="tab-pane">
+        <div id="attendance-section"></div>
+        
         <div id="dashboard-content"></div>
         <div id="upload-section" class="card" style="text-align: center; border: 2px dashed var(--border); background: transparent; border-radius: 24px; padding: 20px;">
             <p style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Ажурирај распоред</p>
@@ -181,6 +213,12 @@
     <div id="tab-i" class="tab-pane hidden">
         <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
             <div style="font-weight: 800; font-size: 18px; margin-bottom: 5px;">v4.9.6 Стабилна</div>
+            
+            <div id="info-attendance-preview" class="info-check-list hidden">
+                <h4>Актуелна прозивка</h4>
+                <div id="info-check-items"></div>
+            </div>
+
             <button onclick="clearReplacements()" class="btn-action" style="width:100%; color:#f59e0b; border-color:#f59e0b; cursor: pointer;">Поништи све замене</button>
             <button onclick="clearAppData()" class="btn-action" style="width:100%; color:#ef4444; border-color:#ef4444; cursor: pointer;">Обриши све податке</button>
         </div>
@@ -201,6 +239,16 @@
     </div>
 </div>
 
+<div id="attendanceModal" class="modal-overlay hidden" style="backdrop-filter: blur(8px);">
+    <div id="modalContainer">
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            Прозивка <span onclick="closeAttendanceModal()" style="cursor:pointer; padding: 5px 15px; font-size: 24px;">✕</span>
+        </div>
+        <div id="attendanceList" style="margin-bottom: 20px;"></div>
+        <button class="btn-action primary ripple" style="width: 100%;" onclick="closeAttendanceModal()">Заврши</button>
+    </div>
+</div>
+
 <div id="smart-hint"><span class="hint-pill" onclick="location.reload()">Смена је промењена. Освежите</span></div>
 
 <div class="nav">
@@ -211,6 +259,9 @@
 <script>
 let rawData = [];
 let replacements = {};
+// НОВО: Чување стања чек листе
+let attendanceStatus = JSON.parse(localStorage.getItem('attendance_status')) || {};
+
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
@@ -222,6 +273,121 @@ function filterWorkers() {
         const text = item.innerText.toLowerCase();
         item.style.display = text.includes(query) ? 'flex' : 'none';
     });
+}
+
+// --- НОВО: ЛОГИКА ЗА ПРОЗИВКУ (ЧЕК ЛИСТУ) ---
+function checkAttendanceTime() {
+    const now = new Date();
+    const time = now.getHours() * 60 + now.getMinutes();
+    const smena = getCurrentSmena();
+    
+    // Дефинисани интервали: 7:15-7:45, 15:15-15:45, 23:15-23:45
+    const windows = [
+        {start: 7*60 + 15, end: 7*60 + 45},
+        {start: 15*60 + 15, end: 15*60 + 45},
+        {start: 23*60 + 15, end: 23*60 + 45}
+    ];
+
+    const isInsideWindow = windows.some(w => time >= w.start && time <= w.end);
+    const container = document.getElementById('attendance-section');
+    
+    if (isInsideWindow) {
+        container.innerHTML = `
+            <div class="attendance-card ripple" onclick="openAttendanceModal()">
+                <div class="attendance-info">
+                    <h3>Прозивка у току</h3>
+                    <p>Кликните да означите присутне службенике</p>
+                </div>
+                <div style="color:var(--primary)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+            </div>`;
+    } else {
+        container.innerHTML = "";
+        // Ресетовање листе ако је прошла смена (једноставан ресет ван прозора)
+        if (time % 60 === 0) { // Провера на пун сат ради ресета
+             resetAttendanceIfNewSmena();
+        }
+    }
+    updateInfoAttendance();
+}
+
+function openAttendanceModal() {
+    const list = document.getElementById('attendanceList');
+    list.innerHTML = "";
+    const dan = new Date().getDate();
+    const smena = getCurrentSmena();
+
+    MESTA.forEach(m => {
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
+        const isChecked = attendanceStatus[`${dan}-${smena}-${m}`] || false;
+
+        const item = document.createElement('div');
+        item.className = "check-item ripple";
+        item.onclick = () => toggleCheck(dan, smena, m);
+        item.innerHTML = `
+            <div class="check-box ${isChecked ? 'checked' : ''}">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div style="display:flex; flex-direction:column">
+                <span style="font-size:11px; font-weight:800; opacity:0.6; text-transform:uppercase">${m}</span>
+                <span style="font-size:16px; font-weight:700">${ime}</span>
+            </div>`;
+        list.appendChild(item);
+    });
+    document.getElementById('attendanceModal').classList.remove('hidden');
+    haptic(40);
+}
+
+function toggleCheck(dan, smena, mesto) {
+    const key = `${dan}-${smena}-${mesto}`;
+    attendanceStatus[key] = !attendanceStatus[key];
+    localStorage.setItem('attendance_status', JSON.stringify(attendanceStatus));
+    haptic(30);
+    openAttendanceModal(); // Освежи приказ у модалу
+    updateInfoAttendance();
+}
+
+function closeAttendanceModal() {
+    document.getElementById('attendanceModal').classList.add('hidden');
+    haptic(20);
+}
+
+function updateInfoAttendance() {
+    const infoCont = document.getElementById('info-attendance-preview');
+    const itemsCont = document.getElementById('info-check-items');
+    const dan = new Date().getDate();
+    const smena = getCurrentSmena();
+    
+    itemsCont.innerHTML = "";
+    let count = 0;
+
+    MESTA.forEach(m => {
+        const isChecked = attendanceStatus[`${dan}-${smena}-${m}`];
+        if (isChecked) {
+            count++;
+            const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+            const ime = replacements[`${dan}-${smena}-${m}`] || (radnik ? radnik.ime : "—");
+            itemsCont.innerHTML += `<div style="font-size:13px; font-weight:600; padding:4px 0; border-bottom:1px solid rgba(0,0,0,0.05)">✓ ${ime} <small>(${m})</small></div>`;
+        }
+    });
+
+    if (count > 0) {
+        infoCont.classList.remove('hidden');
+    } else {
+        infoCont.classList.add('hidden');
+    }
+}
+
+function resetAttendanceIfNewSmena() {
+    // Чистимо старе податке да се не нагомилава LocalStorage
+    const dan = new Date().getDate();
+    const smena = getCurrentSmena();
+    Object.keys(attendanceStatus).forEach(key => {
+        if (!key.startsWith(`${dan}-${smena}`)) {
+            delete attendanceStatus[key];
+        }
+    });
+    localStorage.setItem('attendance_status', JSON.stringify(attendanceStatus));
 }
 
 // --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
@@ -244,6 +410,7 @@ function checkSmenaChange() {
     if (current !== lastCheckedSmena) {
         document.getElementById('smart-hint').style.display = 'block';
     }
+    checkAttendanceTime(); // Додато ажурирање прозивке
 }
 setInterval(checkSmenaChange, 30000);
 
@@ -256,6 +423,7 @@ function checkStorage() {
         document.getElementById('upload-section').classList.add('hidden');
         setupFilters();
         renderDashboard();
+        checkAttendanceTime();
     } else {
         document.getElementById('upload-section').classList.remove('hidden');
         document.getElementById('dashboard-content').innerHTML = `<div class="welcome-card"><h2>Добродошли</h2><p>Учитајте распоред да бисте почели.</p></div>`;
@@ -311,6 +479,7 @@ function renderDashboard() {
         <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
         ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border: 1px solid var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
     `;
+    checkAttendanceTime(); // Осигурај да се дугме појави при сваком рендеровању
 }
 
 document.getElementById('fileInput').onchange = function(e) {
@@ -426,7 +595,7 @@ function openSwap(mesto) {
         div.onclick = (e) => {
             haptic(40);
             const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
-            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            const trenutниIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
             ["1", "2", "3"].forEach(s => {
@@ -437,8 +606,8 @@ function openSwap(mesto) {
             });
 
             if (rotiranaSmena) {
-                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
-                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
+                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutниIme}?`)) {
+                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutниIme;
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
                 } else {
                     closeModal(); return; 
@@ -453,7 +622,7 @@ function openSwap(mesto) {
     });
     
     document.getElementById('swapModal').style.display = 'flex';
-    setTimeout(() => searchInput.focus(), 100);
+    // ТАСТАТУРА СЕ ВИШЕ НЕ ПОДИЖЕ АУТОМАТСКИ (searchInput.focus() је уклоњен)
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
@@ -466,6 +635,7 @@ function showTab(tabId, title, el) {
     document.getElementById('page-title').innerText = title;
     if(tabId === 's') { setupFilters(); renderList(); }
     if(tabId === 'u') { renderDashboard(); }
+    if(tabId === 'i') { updateInfoAttendance(); }
 }
 
 function generateText() {
@@ -516,7 +686,7 @@ scrollArea.ontouchmove = e => {
 };
 scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
 
-window.addEventListener('load', () => {});
+window.addEventListener('load', () => { checkAttendanceTime(); });
 </script>
 </body>
 </html>
