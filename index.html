@@ -22,6 +22,7 @@
             --border: #d6e3ff;
             --card-radius: 32px;
             --ripple-color: rgba(0, 71, 152, 0.2);
+            --check-green: #22c55e;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -46,7 +47,6 @@
 
         #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--on-surface-variant); font-size: 13px; font-weight: 700; transition: height 0.2s; }
         
-        /* ПАМЕТНА ПОРУКА ИЗНАД НАВИГАЦИЈЕ */
         #smart-hint { 
             position: fixed; 
             bottom: 100px; 
@@ -106,7 +106,38 @@
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* СПЕЦИЈАЛНИ СТИЛОВИ ЗА ПРЕТРАГУ КОЈА НЕ БЕЖИ */
+        /* НОВО: ЧЕК ЛИСТА СТИЛОВИ */
+        .check-circle { 
+            width: 24px; 
+            height: 24px; 
+            border: 2px solid var(--border); 
+            border-radius: 50%; 
+            margin-right: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: all 0.2s; 
+            background: transparent;
+        }
+        .check-circle.checked { 
+            background: var(--check-green); 
+            border-color: var(--check-green); 
+        }
+        .check-circle svg { 
+            width: 16px; 
+            height: 16px; 
+            fill: white; 
+        }
+        #count-summary { 
+            font-size: 11px; 
+            font-weight: 900; 
+            color: var(--on-surface-variant); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 12px; 
+            margin-left: 5px;
+        }
+
         #search-wrapper { 
             position: sticky; 
             top: 0; 
@@ -142,16 +173,6 @@
 
         #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 14px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 2000; }
         .hidden { display: none; }
-        
-        /* СТИЛ ЗА ЧЕК-ЛИСТУ */
-        .check-circle { 
-            min-width: 28px; height: 28px; border-radius: 50%; 
-            border: 2px solid #cbd5e1; display: flex; 
-            align-items: center; justify-content: center; 
-            margin-right: 12px; transition: 0.2s;
-        }
-        .check-circle.checked { background: #22c55e; border-color: #22c55e; }
-        .check-circle svg { width: 18px; height: 18px; fill: white; }
     </style>
 </head>
 <body onload="checkStorage()">
@@ -181,7 +202,7 @@
                 <option value="3">Трећа смена</option>
             </select>
         </div>
-        <div id="count-summary" style="text-align: right; padding: 0 10px 10px; font-size: 13px; font-weight: 800; color: var(--primary);">ПРИСУТНО: 0 / 12</div>
+        <div id="count-summary"></div>
         <div id="lista-prikaz"></div>
         <div class="actions" id="action-buttons" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
             <button class="btn-action ripple" onclick="copyToClipboard(event)">Копирај</button>
@@ -226,7 +247,6 @@ let checkedWorkers = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
-// --- НОВА ФУНКЦИЈА ЗА ПРЕТРАГУ (LIVE SEARCH) ---
 function filterWorkers() {
     const query = document.getElementById('worker-search').value.toLowerCase();
     const items = document.querySelectorAll('#workerList .worker-item-row');
@@ -236,7 +256,6 @@ function filterWorkers() {
     });
 }
 
-// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 function createRipple(event) {
     const button = event.currentTarget;
@@ -259,7 +278,7 @@ function checkSmenaChange() {
 }
 setInterval(checkSmenaChange, 30000);
 
-// ФУНКЦИЈА ЗА ШТИКЛИРАЊЕ
+// НОВО: Функција за штиклирање
 function toggleCheck(mesto, event) {
     event.stopPropagation();
     const dan = document.getElementById('danSel').value;
@@ -414,7 +433,7 @@ function renderList() {
                 </div>
                 <div class="mesto-info">
                     <span class="mesto-name">${m}</span>
-                    <span class="worker-name" style="${isChecked ? 'color: #16a34a;' : ''}">${displayName}</span>
+                    <span class="worker-name">${displayName}</span>
                     ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
                 </div>
             </div>
@@ -470,7 +489,7 @@ function openSwap(mesto) {
 
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
+            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
@@ -481,13 +500,14 @@ function openSwap(mesto) {
                 if(imeUSmeni === w) rotiranaSmena = s;
             });
 
-            // Кад мењаш неког, скини му штиклу
+            // Поништавамо штиклу на том месту код замене
             delete checkedWorkers[`${dan}-${smenaTrenutna}-${mesto}`];
 
             if (rotiranaSmena) {
                 if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
                     replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
                     replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
+                    // Поништи и штиклу ротираног службеника
                     delete checkedWorkers[`${dan}-${rotiranaSmena}-${mesto}`];
                 } else {
                     closeModal(); return; 
@@ -503,6 +523,7 @@ function openSwap(mesto) {
     });
     
     document.getElementById('swapModal').style.display = 'flex';
+    // УКЛОЊЕН .focus() ДА НЕ ИСКАЧЕ ТАСТАТУРА
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
