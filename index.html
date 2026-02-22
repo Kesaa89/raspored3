@@ -180,12 +180,16 @@
 </div>
 
 <div id="attendanceModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 1100; backdrop-filter: blur(8px);">
-    <div id="modalContainer">
-        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <div id="modalContainer" style="display: flex; flex-direction: column;">
+        <div style="font-weight: 800; font-size: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
             Прозивка <span onclick="closeAttendanceModal()" style="cursor:pointer; padding: 5px 15px; font-size: 24px;">✕</span>
         </div>
-        <div id="attendanceList" style="margin-bottom: 20px; max-height: 50vh; overflow-y: auto;"></div>
-        <button class="btn-action primary ripple" style="width: 100%;" onclick="closeAttendanceModal()">Заврши</button>
+        
+        <div id="attendanceList" style="margin-bottom: 20px; max-height: 55vh; overflow-y: auto; flex-grow: 1;"></div>
+        
+        <button class="btn-action primary ripple" style="width: 100%; flex-shrink: 0; position: relative; z-index: 10;" onclick="closeAttendanceModal()">
+            Заврши
+        </button>
     </div>
 </div>
 
