@@ -320,112 +320,6 @@ function updateInfoAttendance() {
     } else {
         infoCont.classList.add('hidden');
     }
-    
-    // ДОДАТО: Покретање обрачуна плате
-    renderPatrolaWallet();
-}
-
-// --- НОВО: ПАТРОЛНИ НОВЧАНИК (ОБРАЧУН ПЛАТЕ) ---
-
-const PATROL_CONFIG = {
-    satnica: 598.30,
-    topliObrokPoSatu: 44.625,
-    regresFiksno: 2378.00,
-    dodatakNocni: 0.26,
-    dodatakPraznik: 1.20,
-    praznici2026: [
-        "01.01", "02.01", "07.01", "15.02", "16.02", "17.02", 
-        "10.04", "11.04", "12.04", "13.04", "01.05", "02.05", "11.11"
-    ]
-};
-
-function renderPatrolaWallet() {
-    const container = document.getElementById('info-attendance-preview');
-    if (!container) return;
-    
-    let walletDiv = document.getElementById('patrola-wallet-section');
-    if (!walletDiv) {
-        walletDiv = document.createElement('div');
-        walletDiv.id = 'patrola-wallet-section';
-        walletDiv.className = 'info-check-list';
-        walletDiv.style.marginTop = '20px';
-        walletDiv.style.border = '2px solid #22c55e';
-        container.parentNode.insertBefore(walletDiv, container.nextSibling);
-    }
-
-    let html = `<h4><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom:-3px; margin-right:5px"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 00-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg> Патролни Обрачун</h4>`;
-    
-    const patrolci = rawData.filter(r => r.mesto === "Патрола 1" || r.mesto === "Патрола 2");
-    
-    if (patrolci.length === 0) {
-        html += `<p style="font-size:12px; opacity:0.6">Учитајте распоред за приказ обрачуна.</p>`;
-    } else {
-        patrolci.forEach(p => {
-            const stats = calculateSalary(p.raspored);
-            html += `
-                <div style="padding:12px 0; border-bottom:1px solid rgba(0,0,0,0.05)">
-                    <div style="display:flex; justify-content:space-between; align-items:center">
-                        <span style="font-weight:800; font-size:15px">${p.ime}</span>
-                        <span style="color:#22c55e; font-weight:800; font-size:16px">${stats.total.toLocaleString('sr-RS', {minimumFractionDigits: 2})} дин</span>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:8px; font-size:11px; font-weight:700; opacity:0.7">
-                        <span>Сати: ${stats.sati}х</span>
-                        <span>Ноћни: ${stats.nocni}х</span>
-                        <span>Празник: ${stats.praznikSati}х</span>
-                        <span>Т. Оброк: ${stats.topliObrok.toFixed(0)} дин</span>
-                    </div>
-                </div>`;
-        });
-    }
-    walletDiv.innerHTML = html;
-}
-
-function calculateSalary(raspored) {
-    let totalSati = 0;
-    let nocniSati = 0;
-    let praznikSati = 0;
-    const now = new Date();
-    const mesecIdx = now.getMonth() + 1;
-    const mesecStr = mesecIdx < 10 ? '0' + mesecIdx : mesecIdx;
-
-    raspored.forEach((smena, index) => {
-        if (!smena || smena === "" || smena === "L" || smena === "S") return;
-        
-        const dan = index + 1;
-        const danStr = dan < 10 ? '0' + dan : dan;
-        const datumDanas = `${danStr}.${mesecStr}`;
-        const isDanasPraznik = PATROL_CONFIG.praznici2026.includes(datumDanas);
-        
-        const sutra = dan + 1;
-        const sutraStr = sutra < 10 ? '0' + sutra : sutra;
-        const datumSutra = `${sutraStr}.${mesecStr}`;
-        const isSutraPraznik = PATROL_CONFIG.praznici2026.includes(datumSutra);
-
-        totalSati += 8;
-
-        if (smena === "1" || smena === "2") {
-            if (isDanasPraznik) praznikSati += 8;
-            if (smena === "2") nocniSati += 1; 
-        } 
-        else if (smena === "3") {
-            nocniSati += 7; 
-            if (isDanasPraznik) praznikSati += 1; 
-            if (isSutraPraznik) praznikSati += 7; 
-        }
-    });
-
-    const osnovnaPlata = totalSati * PATROL_CONFIG.satnica;
-    const nocniDodatak = nocniSati * (PATROL_CONFIG.satnica * PATROL_CONFIG.dodatakNocni);
-    const praznikDodatak = praznikSati * (PATROL_CONFIG.satnica * PATROL_CONFIG.dodatakPraznik);
-    const topliObrok = totalSati * PATROL_CONFIG.topliObrokPoSatu;
-    
-    return {
-        sati: totalSati,
-        nocni: nocniSati,
-        praznikSati: praznikSati,
-        topliObrok: topliObrok,
-        total: osnovnaPlata + nocniDodatak + praznikDodatak + topliObrok + PATROL_CONFIG.regresFiksno
-    };
 }
 
 // --- КРАЈ ЛОГИКЕ ЗА ПРОЗИВКУ ---
@@ -645,7 +539,7 @@ function openSwap(mesto) {
 
         div.onclick = (e) => {
             haptic(40);
-            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
+            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
             const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
             
             let rotiranaSmena = "";
@@ -673,6 +567,7 @@ function openSwap(mesto) {
     });
     
     document.getElementById('swapModal').style.display = 'flex';
+    // Твоја напомена: Уклоњен аутоматски фокус/тастатура
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
