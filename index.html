@@ -62,7 +62,7 @@
         .attendance-info p { margin: 4px 0 0; font-size: 12px; font-weight: 600; opacity: 0.7; }
 
         .check-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
-        .check-box { width: 26px; height: 26px; border: 2px solid var(--primary); border-radius: 8px; margin-right: 15px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .check-box { width: 26px; height: 26px; border: 2px solid var(--primary); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; transition: background 0.3s ease; }
         .check-box.checked { background: var(--check-green); border-color: var(--check-green); }
         .check-box svg { stroke: white; display: none; }
         .check-box.checked svg { display: block; }
@@ -266,9 +266,7 @@ function openAttendanceModal() {
         item.onclick = () => toggleCheck(dan, smena, m);
         item.innerHTML = `
             <div class="check-box ${isChecked ? 'checked' : ''}">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                
             </div>
             <div style="display:flex; flex-direction:column">
                 <span style="font-size:11px; font-weight:800; opacity:0.6; text-transform:uppercase">${m}</span>
