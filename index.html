@@ -22,7 +22,6 @@
             --border: #d6e3ff;
             --card-radius: 32px;
             --ripple-color: rgba(0, 71, 152, 0.2);
-            --check-green: #22c55e;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -47,12 +46,34 @@
 
         #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--on-surface-variant); font-size: 13px; font-weight: 700; transition: height 0.2s; }
         
-        #smart-hint { position: fixed; bottom: 100px; left: 0; right: 0; text-align: center; display: none; z-index: 99; animation: slideUp 0.4s ease; }
-        .hint-pill { background: var(--primary); color: white; padding: 12px 24px; border-radius: 25px; font-size: 13px; font-weight: 800; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* ПАМЕТНА ПОРУКА ИЗНАД НАВИГАЦИЈЕ */
+        #smart-hint { 
+            position: fixed; 
+            bottom: 100px; 
+            left: 0; 
+            right: 0; 
+            text-align: center; 
+            display: none; 
+            z-index: 99; 
+            animation: slideUp 0.4s ease; 
+        }
+        .hint-pill { 
+            background: var(--primary); 
+            color: white; 
+            padding: 12px 24px; 
+            border-radius: 25px; 
+            font-size: 13px; 
+            font-weight: 800; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
+        }
+        @keyframes slideUp { 
+            from { transform: translateY(20px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
 
         .app-bar { padding: 55px 24px 10px; background: transparent; flex-shrink: 0; }
         .app-bar h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+        
         .main-content { flex: 1; overflow-y: auto; padding: 10px 16px 180px; scroll-behavior: smooth; position: relative; }
 
         .welcome-card { background: var(--primary-container); color: var(--on-primary-container); border-radius: var(--card-radius); padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
@@ -78,37 +99,42 @@
         .controls { display: grid; gap: 12px; margin-bottom: 20px; }
         select { width: 100%; padding: 18px; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-variant); color: var(--on-surface); font-size: 16px; font-weight: 700; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; background-size: 18px; }
 
-        .mesto-row { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 18px 14px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 18px; transition: background 0.2s; }
-        .mesto-row.has-replacement { background: var(--primary-container) !important; }
+        .mesto-row { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 18px 14px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 18px; }
+        .mesto-row.has-replacement { background: var(--border); }
         .mesto-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .mesto-name { font-size: 11px; color: var(--on-surface-variant); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
         .worker-name { font-size: 17px; font-weight: 700; }
         .swap-hint { font-size: 12px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
 
-        /* ФИКСИРАН КРУЖИЋ */
-        .check-wrapper { display: flex; align-items: center; justify-content: center; width: 40px; margin-right: 10px; flex-shrink: 0; z-index: 10; }
-        .check-circle { 
-            width: 26px; 
-            height: 26px; 
-            border: 2.5px solid var(--on-surface-variant); 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        /* СПЕЦИЈАЛНИ СТИЛОВИ ЗА ПРЕТРАГУ КОЈА НЕ БЕЖИ */
+        #search-wrapper { 
+            position: sticky; 
+            top: 0; 
             background: var(--bg); 
-            transition: 0.2s all;
+            padding-bottom: 15px; 
+            z-index: 10; 
+            margin-top: -5px;
         }
-        .check-circle.checked { 
-            background: var(--check-green) !important; 
-            border-color: var(--check-green) !important; 
+        #worker-search {
+            width: 100%;
+            padding: 16px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            background: var(--surface-variant);
+            color: var(--on-surface);
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
         }
-        .check-circle svg { width: 16px; height: 16px; fill: white; display: none; }
-        .check-circle.checked svg { display: block; }
-
-        #count-summary { font-size: 11px; font-weight: 900; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; margin-left: 5px; }
-        #search-wrapper { position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; z-index: 10; margin-top: -5px; }
-        #worker-search { width: 100%; padding: 16px; border-radius: 20px; border: 2px solid var(--border); background: var(--surface-variant); color: var(--on-surface); font-size: 16px; font-weight: 700; outline: none; }
-        #modalContainer { background: var(--bg); width: 100%; min-height: 80vh; max-height: 85vh; border-radius: 32px 32px 0 0; padding: 24px; overflow-y: auto; }
+        #modalContainer {
+            background: var(--bg); 
+            width: 100%; 
+            min-height: 80vh; 
+            max-height: 85vh; 
+            border-radius: 32px 32px 0 0; 
+            padding: 24px; 
+            overflow-y: auto;
+        }
 
         .nav { position: fixed; bottom: 24px; left: 24px; right: 24px; background: var(--surface-variant); display: flex; border: 1px solid var(--border); padding: 8px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; backdrop-filter: blur(10px); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; border-radius: 24px; color: var(--on-surface-variant); transition: 0.3s; }
@@ -145,7 +171,6 @@
                 <option value="3">Трећа смена</option>
             </select>
         </div>
-        <div id="count-summary"></div>
         <div id="lista-prikaz"></div>
         <div class="actions" id="action-buttons" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
             <button class="btn-action ripple" onclick="copyToClipboard(event)">Копирај</button>
@@ -186,10 +211,10 @@
 <script>
 let rawData = [];
 let replacements = {};
-let checkedWorkers = {};
 const MESTA = ["Портирница", "Низводна глава", "Мост", "Узводна глава", "Разводно постројење", "Пут Кладово Текија", "Магацин Караташ", "Депонија Нови Сип", "Спортска хала", "Управна зграда", "Патрола 1", "Патрола 2"];
 const MESECI = ["Јануар", "Фебруар", "Март", "Април", "Мај", "Јун", "Јул", "Август", "Септембар", "Октобар", "Новембар", "Децембар"];
 
+// --- НОВА ФУНКЦИЈА ЗА ПРЕТРАГУ (LIVE SEARCH) ---
 function filterWorkers() {
     const query = document.getElementById('worker-search').value.toLowerCase();
     const items = document.querySelectorAll('#workerList .worker-item-row');
@@ -199,6 +224,7 @@ function filterWorkers() {
     });
 }
 
+// --- ОРИГИНАЛНЕ ФУНКЦИЈЕ ---
 function haptic(pattern = 30) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(pattern); }
 function createRipple(event) {
     const button = event.currentTarget;
@@ -215,27 +241,16 @@ function createRipple(event) {
 let lastCheckedSmena = getCurrentSmena();
 function checkSmenaChange() {
     const current = getCurrentSmena();
-    if (current !== lastCheckedSmena) { document.getElementById('smart-hint').style.display = 'block'; }
+    if (current !== lastCheckedSmena) {
+        document.getElementById('smart-hint').style.display = 'block';
+    }
 }
 setInterval(checkSmenaChange, 30000);
-
-function toggleCheck(mesto, event) {
-    event.stopPropagation();
-    const dan = document.getElementById('danSel').value;
-    const smena = document.getElementById('smenaSel').value;
-    const key = `${dan}-${smena}-${mesto}`;
-    checkedWorkers[key] = !checkedWorkers[key];
-    localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
-    haptic(checkedWorkers[key] ? [40, 30] : 20);
-    renderList();
-}
 
 function checkStorage() {
     const saved = localStorage.getItem('raspored_data');
     const savedReplacements = localStorage.getItem('rucne_zamene');
-    const savedChecked = localStorage.getItem('checked_workers');
     if (savedReplacements) replacements = JSON.parse(savedReplacements);
-    if (savedChecked) checkedWorkers = JSON.parse(savedChecked);
     if (saved) {
         rawData = JSON.parse(saved);
         document.getElementById('upload-section').classList.add('hidden');
@@ -259,7 +274,12 @@ function renderDashboard() {
     const dan = now.getDate();
     const smena = getCurrentSmena();
     const hour = now.getHours();
-    let greeting = (hour >= 5 && hour < 10) ? "Добро јутро" : (hour >= 18 && hour < 22) ? "Добро вече" : (hour >= 22 || hour < 5) ? "Радна ноћ" : "Добар дан";
+    
+    let greeting = "Добар дан";
+    if (hour >= 5 && hour < 10) greeting = "Добро јутро";
+    else if (hour >= 18 && hour < 22) greeting = "Добро вече";
+    else if (hour >= 22 || hour < 5) greeting = "Радна ноћ – Срећан рад";
+
     const smenaNaziv = smena === "1" ? "ПРВА" : (smena === "2" ? "ДРУГА" : "ТРЕЋА");
 
     let previewHtml = "";
@@ -272,16 +292,24 @@ function renderDashboard() {
     let zameneHtml = "";
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
         const replaced = replacements[`${dan}-${smena}-${m}`];
         if (replaced) {
-            zameneHtml += `<div class="mini-row"><span class="mini-mesto">${m}</span><span class="mini-ime">${replaced} <small>уместо ${radnik ? radnik.ime : '—'}</small></span></div>`;
+            zameneHtml += `
+                <div class="mini-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                    <span class="mini-mesto" style="white-space: nowrap;">${m}</span>
+                    <span class="mini-ime" style="text-align: right; font-size: 13px; line-height: 1.2;">
+                        ${replaced}<br>
+                        <small style="opacity:0.6; font-size: 10px; font-weight: 500;">уместо ${originalIme}</small>
+                    </span>
+                </div>`;
         }
     });
 
     document.getElementById('dashboard-content').innerHTML = `
         <div class="welcome-card"><h2>${greeting}!</h2><p>Данас је ${dan}. ${MESECI[now.getMonth()]}. Смена: <b>${smenaNaziv}</b></p></div>
         <div class="live-preview"><div class="live-header"><span>Тренутно на дужности</span><div class="live-dot"></div></div>${previewHtml}</div>
-        ${zameneHtml ? `<div class="live-preview" style="border: 1px solid var(--primary);"><div class="live-header"><span>Активне замене</span></div>${zameneHtml}</div>` : ''}
+        ${zameneHtml ? `<div class="live-preview" style="margin-top:-10px; border: 1px solid var(--primary);"><div class="live-header"><span style="color:var(--primary)">Активне замене у смени</span></div>${zameneHtml}</div>` : ''}
     `;
 }
 
@@ -298,7 +326,9 @@ document.getElementById('fileInput').onchange = function(e) {
                 if(!row || row.length < 2) return;
                 let rowText = row.join(" ").toUpperCase();
                 MESTA.forEach(m => {
-                    let match = (m === "Пут Кладово Текија") ? (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО")) : (m === "Управна зграда") ? (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")) : rowText.includes(m.toUpperCase());
+                    let match = (m === "Пут Кладово Текија") ? (rowText.includes("ТЕКИЈА") || rowText.includes("КЛАДОВО")) :
+                                (m === "Управна зграда") ? (rowText.includes("УПРАВН") || rowText.includes("ЗГРАДА")) : 
+                                rowText.includes(m.toUpperCase());
                     if(match) currentMesto = m;
                 });
                 if(/^\d+/.test(String(row[0]).trim()) && String(row[1]).length > 2 && currentMesto) {
@@ -308,7 +338,7 @@ document.getElementById('fileInput').onchange = function(e) {
         });
         localStorage.setItem('raspored_data', JSON.stringify(rawData));
         document.getElementById('upload-section').classList.add('hidden');
-        setupFilters(); renderDashboard();
+        setupFilters(); renderDashboard(); haptic([60, 40, 60]);
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 };
@@ -331,28 +361,16 @@ function renderList() {
     const smena = document.getElementById('smenaSel').value;
     const container = document.getElementById('lista-prikaz');
     container.innerHTML = "";
-    let confirmedCount = 0;
-
     MESTA.forEach(m => {
         const radnik = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smena);
         const originalIme = radnik ? radnik.ime : "—";
         const isReplaced = replacements[`${dan}-${smena}-${m}`];
-        const isChecked = checkedWorkers[`${dan}-${smena}-${m}`];
         const displayName = isReplaced ? `${isReplaced} <small style="opacity:0.6">уместо</small> ${originalIme}` : originalIme;
         
-        if (isChecked && (originalIme !== "—" || isReplaced)) confirmedCount++;
-
         const row = document.createElement('div');
         row.className = `mesto-row ripple ${isReplaced ? 'has-replacement' : ''}`;
         row.onclick = (e) => { haptic(30); createRipple(e); openSwap(m); };
-        
-        row.innerHTML = `
-            <div class="check-wrapper" onclick="toggleCheck('${m}', event)">
-                <div class="check-circle ${isChecked ? 'checked' : ''}">
-                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </div>
-            </div>
-            <div class="mesto-info">
+        row.innerHTML = `<div class="mesto-info">
                 <span class="mesto-name">${m}</span>
                 <span class="worker-name">${displayName}</span>
                 ${originalIme !== "—" ? `<span class="swap-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Замени</span>` : ''}
@@ -360,7 +378,6 @@ function renderList() {
             <div style="opacity:0.3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></div>`;
         container.appendChild(row);
     });
-    document.getElementById('count-summary').innerText = `ПРИСУТНО: ${confirmedCount} / 12`;
     document.getElementById('action-buttons').style.display = 'grid';
 }
 
@@ -369,38 +386,86 @@ function openSwap(mesto) {
     listCont.innerHTML = "";
     const searchInput = document.getElementById('worker-search');
     searchInput.value = ""; 
+    
     const dan = parseInt(document.getElementById('danSel').value);
     const smenaTrenutna = document.getElementById('smenaSel').value;
     const allWorkers = [...new Set(rawData.map(r => r.ime))].sort();
 
     allWorkers.forEach(w => {
-        let isTired = (dan > 1 && smenaTrenutna === "1" && rawData.find(r => r.ime === w && r.raspored[dan-2] === "3"));
+        let isTired = false;
+        if(dan > 1 && smenaTrenutna === "1") {
+            const radioJuče = rawData.find(r => r.ime === w && r.raspored[dan-2] === "3");
+            if(radioJuče) isTired = true;
+        }
+
         const radnikInfo = rawData.find(r => r.ime === w);
+        const radnoMesto = radnikInfo ? radnikInfo.mesto : "Off";
+
         const div = document.createElement('div');
         div.className = "ripple worker-item-row"; 
-        div.style.cssText = 'padding:18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;';
-        div.innerHTML = `<span style="fontWeight:600; ${isTired ? 'color:#f39c12;' : ''}">${w}</span><span style="fontSize:11px; opacity:0.5;">${radnikInfo ? radnikInfo.mesto : 'Off'}</span>`;
-        div.onclick = () => {
-            const radnikIzBaze = rawData.find(r => r.mesto === m && r.raspored[dan-1] === smenaTrenutna);
-            replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
-            delete checkedWorkers[`${dan}-${smenaTrenutna}-${mesto}`];
+        div.style.padding = '18px'; 
+        div.style.borderBottom = '1px solid var(--border)'; 
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.innerText = w;
+        nameSpan.style.fontWeight = '600';
+        if(isTired) nameSpan.style.color = '#f39c12';
+        
+        const placeSpan = document.createElement('span');
+        placeSpan.innerText = radnoMesto;
+        placeSpan.style.fontSize = '11px';
+        placeSpan.style.opacity = '0.5';
+        placeSpan.style.fontWeight = '500';
+
+        div.appendChild(nameSpan);
+        div.appendChild(placeSpan);
+
+        div.onclick = (e) => {
+            haptic(40);
+            const radnikIzBaze = rawData.find(r => r.mesto === mesto && r.raspored[dan-1] === smenaTrenutna);
+            const trenutniIme = replacements[`${dan}-${smenaTrenutna}-${mesto}`] || (radnikIzBaze ? radnikIzBaze.ime : "—");
+            
+            let rotiranaSmena = "";
+            ["1", "2", "3"].forEach(s => {
+                if(s === smenaTrenutna) return;
+                const rS = rawData.find(rd => rd.mesto === mesto && rd.raspored[dan-1] === s);
+                const imeUSmeni = replacements[`${dan}-${s}-${mesto}`] || (rS ? rS.ime : "—");
+                if(imeUSmeni === w) rotiranaSmena = s;
+            });
+
+            if (rotiranaSmena) {
+                if (confirm(`${w} ради на овом месту у ${rotiranaSmena}. смени.\nЖелите ли да извршите ротацију са ${trenutniIme}?`)) {
+                    replacements[`${dan}-${rotiranaSmena}-${mesto}`] = trenutniIme;
+                    replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
+                } else {
+                    closeModal(); return; 
+                }
+            } else {
+                replacements[`${dan}-${smenaTrenutna}-${mesto}`] = w;
+            }
             localStorage.setItem('rucne_zamene', JSON.stringify(replacements));
-            localStorage.setItem('checked_workers', JSON.stringify(checkedWorkers));
             closeModal(); renderList(); renderDashboard();
         };
         listCont.appendChild(div);
     });
+    
     document.getElementById('swapModal').style.display = 'flex';
+    setTimeout(() => searchInput.focus(), 100);
 }
 
 function closeModal() { haptic(25); document.getElementById('swapModal').style.display = 'none'; }
+
 function showTab(tabId, title, el) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     if(el) { el.classList.add('active'); haptic(45); }
     document.getElementById('page-title').innerText = title;
-    if(tabId === 's') { renderList(); } else if(tabId === 'u') { renderDashboard(); }
+    if(tabId === 's') { setupFilters(); renderList(); }
+    if(tabId === 'u') { renderDashboard(); }
 }
 
 function generateText() {
@@ -409,27 +474,49 @@ function generateText() {
     const now = new Date();
     let d1 = new Date(now.getFullYear(), now.getMonth(), danIdx);
     const formatDate = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}.`;
-    let datumStr = (smena === "3") ? `${formatDate(d1)}/${formatDate(new Date(now.getFullYear(), now.getMonth(), danIdx+1))}` : formatDate(d1);
+    let datumStr = formatDate(d1);
+    if (smena === "3") {
+        let d2 = new Date(now.getFullYear(), now.getMonth(), danIdx + 1);
+        datumStr = `${formatDate(d1)}/${formatDate(d2)}`;
+    }
     let text = `ЂЕРДАП 1 КЛАДОВО\n${datumStr}\n${document.getElementById('smenaSel').options[document.getElementById('smenaSel').selectedIndex].text}\n\n`;
     MESTA.forEach(m => {
-        const r = rawData.find(rd => rd.mesto === m && rd.raspored[danIdx-1] === smena);
-        const rep = replacements[`${danIdx}-${smena}-${m}`];
-        text += `${m}: ${rep ? rep + ' уместо ' + (r ? r.ime : '—') : (r ? r.ime : '—')}\n`;
+        const radnik = rawData.find(r => r.mesto === m && r.raspored[danIdx-1] === smena);
+        const originalIme = radnik ? radnik.ime : "—";
+        const replaced = replacements[`${danIdx}-${smena}-${m}`];
+        text += `${m}: ${replaced ? replaced + ' уместо ' + originalIme : originalIme}\n`;
     });
     return text;
 }
 
 async function copyToClipboard(e) { haptic([70, 50, 70]); createRipple(e); await navigator.clipboard.writeText(generateText()); document.getElementById('toast').style.opacity=1; setTimeout(()=>document.getElementById('toast').style.opacity=0,2000); }
 async function shareList(e) { haptic([70, 50, 70]); createRipple(e); if(navigator.share) navigator.share({text: generateText()}); else copyToClipboard(e); }
-function clearReplacements() { if(confirm("Обрисати замене и чекиране ставке?")) { replacements = {}; checkedWorkers = {}; localStorage.removeItem('rucne_zamene'); localStorage.removeItem('checked_workers'); renderList(); renderDashboard(); } }
-function clearAppData() { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }
+
+function clearReplacements() {
+    haptic(100); 
+    setTimeout(() => {
+        if(confirm("Да ли желите да обришете само ручно унете замене? Распоред ће остати сачуван.")) {
+            replacements = {};
+            localStorage.removeItem('rucne_zamene');
+            renderDashboard();
+            renderList();
+        }
+    }, 100);
+}
+
+function clearAppData() { haptic(100); setTimeout(() => { if(confirm("Обрисати све податке?")) { localStorage.clear(); location.reload(); } }, 100); }
 
 let touchStart = 0;
 const scrollArea = document.getElementById('scroll-area');
 const ptr = document.getElementById('ptr-indicator');
 scrollArea.ontouchstart = e => { touchStart = e.touches[0].pageY; };
-scrollArea.ontouchmove = e => { let diff = e.touches[0].pageY - touchStart; if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px'; };
-scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { location.reload(); } ptr.style.height = '0'; };
+scrollArea.ontouchmove = e => {
+    let diff = e.touches[0].pageY - touchStart;
+    if (scrollArea.scrollTop === 0 && diff > 0 && diff < 100) ptr.style.height = diff + 'px';
+};
+scrollArea.ontouchend = () => { if (parseInt(ptr.style.height) > 60) { haptic([60, 60]); location.reload(); } ptr.style.height = '0'; };
+
+window.addEventListener('load', () => {});
 </script>
 </body>
 </html>
